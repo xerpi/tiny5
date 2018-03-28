@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'm':
-			max_ticks = strtoul(optarg, NULL, 0);
+			max_ticks = strtoull(optarg, NULL, 0);
 			break;
 		case 'h':
 			usage(argv);
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 	tiny5tb->enableTracing("trace.vcd");
 	tiny5tb->resetTick();
 
-	while ((tiny5tb->getTimeStamp() <= 2 * max_ticks) && !Verilated::gotFinish()) {
+	while ((tiny5tb->getTimeStamp() < 2 * max_ticks) && !Verilated::gotFinish()) {
 		tiny5tb->tick();
 	}
 

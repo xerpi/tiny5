@@ -36,9 +36,9 @@ module datapath(
 	logic [31:0] alu_dout;
 
 	/* TODOs */
-	assign mem_wr_addr_o = 1;
+	assign mem_wr_addr_o = 0;
 	assign mem_wr_data_o = 'h11223344;
-	assign mem_wr_enable_o = 1;
+	assign mem_wr_enable_o = 0;
 
 	regfile rf(
 		.clk_i(clk_i),

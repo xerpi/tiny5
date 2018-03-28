@@ -30,6 +30,8 @@ private:
 	uint64_t timeStamp;
 	std::map<uint32_t, uint8_t> mem;
 	VerilatedVcdC *vcd;
+
+	void advanceTimeStamp(void);
 };
 
 #endif

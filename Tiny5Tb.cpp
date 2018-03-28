@@ -8,6 +8,7 @@ Tiny5Tb::Tiny5Tb(Vtop *top) :
 Tiny5Tb::~Tiny5Tb()
 {
 	if (vcd) {
+		vcd->dump(timeStamp);
 		vcd->close();
 		delete vcd;
 	}
@@ -19,14 +20,13 @@ void Tiny5Tb::resetTick(void)
 	top->reset_i = 1;
 	top->eval();
 
+	advanceTimeStamp();
+
 	top->clk_i = 0;
 	top->reset_i = 0;
 	top->eval();
 
-	timeStamp += 2;
-
-	if (vcd)
-		vcd->dump(timeStamp);
+	advanceTimeStamp();
 }
 
 void Tiny5Tb::tick(void)
@@ -34,13 +34,12 @@ void Tiny5Tb::tick(void)
 	top->clk_i = 1;
 	top->eval();
 
+	advanceTimeStamp();
+
 	top->clk_i = 0;
 	top->eval();
 
-	timeStamp += 2;
-
-	if (vcd)
-		vcd->dump(timeStamp);
+	advanceTimeStamp();
 }
 
 void Tiny5Tb::enableTracing(const std::string &name, int levels, int options)
@@ -61,6 +60,14 @@ void Tiny5Tb::enableTracing(const std::string &name, int levels, int options)
 uint64_t Tiny5Tb::getTimeStamp(void)
 {
 	return timeStamp;
+}
+
+void Tiny5Tb::advanceTimeStamp(void)
+{
+	if (vcd)
+		vcd->dump(timeStamp);
+
+	timeStamp++;
 }
 
 uint8_t Tiny5Tb::memRead8(uint32_t address)

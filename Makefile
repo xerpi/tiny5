@@ -4,6 +4,8 @@ SV_SOURCES = top.sv definitions.sv alu.sv control.sv datapath.sv \
 	mem_tb.sv regfile.sv
 TOP_MODULE = top
 TB_SOURCES = main.cpp Tiny5Tb.cpp
+TRACE = trace.vcd
+
 VERILATOR_FLAGS = -Wno-fatal -Wall
 VTOP = V$(TOP_MODULE)
 
@@ -16,15 +18,15 @@ obj_dir/$(VTOP): $(SV_SOURCES) $(TB_SOURCES)
 verilate: obj_dir/$(VTOP)
 
 lint:
-	$(VERILATOR) -Wall --lint-only $(SV_SOURCES)
+	@$(VERILATOR) -Wall --lint-only $(SV_SOURCES)
 
 run: obj_dir/$(VTOP)
-	@obj_dir/$(VTOP)
+	@obj_dir/$(VTOP) $(ARGS)
 
-gtkwave: trace.vcd
-	@gtkwave trace.vcd &
+gtkwave: $(TRACE)
+	@gtkwave $(TRACE) trace.sav &
 
-trace.vcd: run
+$(TRACE): run
 
 view: top.svg
 	@inkview top.svg 2> /dev/null &
@@ -39,7 +41,7 @@ top.json: $(TOP)
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
 clean:
-	rm -rf obj_dir trace.vcd top.svg top.json
+	rm -rf obj_dir $(TRACE) top.svg top.json
 
 .PHONY:
 	verilate run trace clean

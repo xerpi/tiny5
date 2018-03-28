@@ -29,7 +29,6 @@ module top(
 	);
 
 	initial begin
-		$display("Hello World");
-		//$readmemh("data.hex", mem);
+		$display("Tiny5 init");
 	end
 endmodule

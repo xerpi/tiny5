@@ -5,8 +5,10 @@ module control(
 	input logic [31:0] ir_i,
 	output logic pc_we_o,
 	output next_pc_sel_t next_pc_sel_o,
+	output regfile_in_sel_t regfile_in_sel_o,
 	output logic ir_we_o,
-	output logic mem_rd_addr_sel_o
+	output logic mem_rd_addr_sel_o,
+	output alu_op_t alu_op_o
 );
 	enum {
 		FETCH,
@@ -37,7 +39,12 @@ module control(
 	/* Current instruction driven output logic (decoder) */
 	always_comb begin
 		if (state == DEMW) begin
-
+			case (instr.opcode)
+			OPCODE_LUI: begin
+				alu_op_o = ALU_OP_LUI;
+				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+			end
+			endcase
 		end
 	end
 

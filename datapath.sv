@@ -14,6 +14,9 @@ module datapath(
 	logic [31:0] next_pc;
 	logic [31:0] next_ir;
 
+	/* regfile inputs */
+	logic [31:0] rf_rin;
+
 	/* regfile outputs */
 	logic [31:0] rf_rout1;
 	logic [31:0] rf_rout2;
@@ -21,8 +24,10 @@ module datapath(
 	/* control outputs */
 	logic ctrl_pc_we;
 	next_pc_sel_t ctrl_next_pc_sel;
+	regfile_in_sel_t ctrl_regfile_in_sel;
 	logic ctrl_ir_we;
 	logic ctrl_mem_rd_addr_sel;
+	alu_op_t ctrl_alu_op;
 
 	/* alu outputs */
 	logic [31:0] alu_dout;
@@ -37,7 +42,7 @@ module datapath(
 		.rs1_i(1),
 		.rs2_i(1),
 		.rd_i(1),
-		.rin_i(alu_dout),
+		.rin_i(rf_rin),
 		.we_i(1),
 		.rout1_o(rf_rout1),
 		.rout2_o(rf_rout2)
@@ -48,11 +53,14 @@ module datapath(
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
 		.next_pc_sel_o(ctrl_next_pc_sel),
+		.regfile_in_sel_o(ctrl_regfile_in_sel),
 		.ir_we_o(ctrl_ir_we),
-		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel)
+		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
+		.alu_op_o(ctrl_alu_op)
 	);
 
 	alu al(
+		.alu_op_i(ctrl_alu_op),
 		.din1_i(rf_rout1),
 		.din2_i(rf_rout2),
 		.dout_o(alu_dout)
@@ -65,6 +73,11 @@ module datapath(
 			next_pc = pc;
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
+		endcase
+
+		unique case (ctrl_regfile_in_sel)
+		REGFILE_IN_SEL_ALU_OUT:
+			rf_rin = alu_dout;
 		endcase
 
 		next_ir = mem_rd_data_i;

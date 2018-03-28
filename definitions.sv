@@ -1,6 +1,6 @@
 package definitions;
 
-localparam FOO = 'hAB;
+/* RISC-V ISA definitions */
 
 typedef struct packed {
 	logic [31:25] funct7;
@@ -36,6 +36,7 @@ typedef struct packed {
 
 typedef union packed {
 	logic [31:0] bits;
+	logic [6:0] opcode;
 	instruction_rtype_t rtype;
 	instruction_itype_t itype;
 	instruction_stype_t stype;
@@ -105,9 +106,19 @@ typedef enum logic [2:0] {
 	FUNCT3_MISC_MEM_FENCE_I = 3'b001
 } funct3_miscm_mem_t;
 
+/* tiny5 definitions */
+
 typedef enum logic {
 	NEXT_PC_SEL_PC,
 	NEXT_PC_SEL_PC_4
 } next_pc_sel_t;
+
+typedef enum logic {
+	REGFILE_IN_SEL_ALU_OUT
+} regfile_in_sel_t;
+
+typedef enum logic {
+	ALU_OP_LUI
+} alu_op_t;
 
 endpackage

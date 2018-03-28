@@ -2,9 +2,8 @@ VERILATOR ?= verilator
 
 SV_SOURCES = top.sv definitions.sv alu.sv control.sv datapath.sv \
 	mem_tb.sv regfile.sv
-CC_SOURCES =
 TOP_MODULE = top
-TB_SOURCES = tiny5_tb.cpp
+TB_SOURCES = main.cpp Tiny5Tb.cpp
 VERILATOR_FLAGS = -Wno-fatal -Wall
 VTOP = V$(TOP_MODULE)
 
@@ -22,10 +21,10 @@ lint:
 run: obj_dir/$(VTOP)
 	@obj_dir/$(VTOP)
 
-gtkwave: dump.vcd
-	@gtkwave dump.vcd &
+gtkwave: trace.vcd
+	@gtkwave trace.vcd &
 
-dump.vcd: run
+trace.vcd: run
 
 view: top.svg
 	@inkview top.svg 2> /dev/null &
@@ -40,7 +39,7 @@ top.json: $(TOP)
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
 clean:
-	rm -rf obj_dir dump.vcd top.svg top.json
+	rm -rf obj_dir trace.vcd top.svg top.json
 
 .PHONY:
 	verilate run trace clean

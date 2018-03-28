@@ -1,5 +1,7 @@
 import "DPI-C" function void mem_write8(input int unsigned address, input byte unsigned data);
 import "DPI-C" function byte unsigned mem_read8(input int unsigned address);
+import "DPI-C" function void mem_write16(input int unsigned address, input shortint unsigned data);
+import "DPI-C" function shortint unsigned mem_read16(input int unsigned address);
 import "DPI-C" function void mem_write32(input int unsigned address, input int unsigned data);
 import "DPI-C" function int unsigned mem_read32(input int unsigned address);
 

@@ -4,11 +4,11 @@ module control(
 	input logic clk_i,
 	input logic [31:0] ir_i,
 	output logic pc_we_o,
+	output logic ir_we_o,
+	output alu_op_t alu_op_o,
 	output next_pc_sel_t next_pc_sel_o,
 	output regfile_in_sel_t regfile_in_sel_o,
-	output logic ir_we_o,
-	output logic mem_rd_addr_sel_o,
-	output alu_op_t alu_op_o
+	output mem_rd_addr_sel_t mem_rd_addr_sel_o
 );
 	enum {
 		FETCH,
@@ -26,12 +26,12 @@ module control(
 		FETCH: begin
 			pc_we_o = 0;
 			ir_we_o = 1;
-			mem_rd_addr_sel_o = 0;
+			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
 		end
 		DEMW: begin
 			pc_we_o = 1;
 			ir_we_o = 0;
-			mem_rd_addr_sel_o = 1;
+			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
 		end
 		endcase
 	end

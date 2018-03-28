@@ -52,11 +52,11 @@ module datapath(
 		.clk_i(clk_i),
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
+		.ir_we_o(ctrl_ir_we),
+		.alu_op_o(ctrl_alu_op),
 		.next_pc_sel_o(ctrl_next_pc_sel),
 		.regfile_in_sel_o(ctrl_regfile_in_sel),
-		.ir_we_o(ctrl_ir_we),
-		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
-		.alu_op_o(ctrl_alu_op)
+		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel)
 	);
 
 	alu al(
@@ -66,7 +66,6 @@ module datapath(
 		.dout_o(alu_dout)
 	);
 
-	/* Output logic */
 	always_comb begin
 		unique case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC:
@@ -80,8 +79,14 @@ module datapath(
 			rf_rin = alu_dout;
 		endcase
 
+		unique case (ctrl_mem_rd_addr_sel)
+		MEM_RD_ADDR_SEL_PC:
+			mem_rd_addr_o = pc;
+		MEM_RD_ADDR_SEL_ALU_OUT:
+			mem_rd_addr_o = alu_dout;
+		endcase
+
 		next_ir = mem_rd_data_i;
-		mem_rd_addr_o = ctrl_mem_rd_addr_sel ? 0 : pc;
 	end
 
 	/* Next PC/IR logic */

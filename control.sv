@@ -2,6 +2,7 @@ import definitions::*;
 
 module control(
 	input logic clk_i,
+	input logic reset_i,
 	input logic [31:0] ir_i,
 	output logic pc_we_o,
 	output logic ir_we_o,
@@ -10,7 +11,8 @@ module control(
 	output regfile_in_sel_t regfile_in_sel_o,
 	output mem_rd_addr_sel_t mem_rd_addr_sel_o
 );
-	enum {
+	enum logic [1:0] {
+		RESET,
 		FETCH,
 		DEMW
 	} state;
@@ -18,7 +20,7 @@ module control(
 	instruction_t instr;
 	assign instr = ir_i;
 
-	assign next_pc_sel_o = 0;
+	assign next_pc_sel_o = NEXT_PC_SEL_PC_4;
 
 	/* Current state driven output logic */
 	always_comb begin
@@ -50,6 +52,15 @@ module control(
 
 	/* Next state logic */
 	always_ff @(posedge clk_i) begin
-		state <= (state == FETCH) ? DEMW : FETCH;
+		if (reset_i) begin
+			state <= RESET;
+		end else begin
+			priority case (state)
+			FETCH:
+				state <= DEMW;
+			RESET, DEMW:
+				state <= FETCH;
+			endcase
+		end
 	end
 endmodule

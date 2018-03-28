@@ -19,7 +19,7 @@ verilate: obj_dir/$(VTOP)
 lint:
 	$(VERILATOR) -Wall --lint-only $(SV_SOURCES)
 
-run: obj_dir/$(VTOP) data.hex
+run: obj_dir/$(VTOP)
 	@obj_dir/$(VTOP)
 
 gtkwave: dump.vcd
@@ -33,14 +33,14 @@ view: top.svg
 top.svg: top.json
 	@node $(NETLISTSVG) top.json -o $@
 
-top.json: $(TOP) data.hex
+top.json: $(TOP)
 	@yosys -q -o top.json -p proc -p opt -p "hierarchy -auto-top -libdir ." $(TOP)
 
 %.hex: %.bin
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
 clean:
-	rm -rf obj_dir data.hex dump.vcd top.svg top.json
+	rm -rf obj_dir dump.vcd top.svg top.json
 
 .PHONY:
 	verilate run trace clean

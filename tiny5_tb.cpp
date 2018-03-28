@@ -68,6 +68,17 @@ int main(int argc, char *argv[])
 	vcd->open("dump.vcd");
 #endif
 
+	top->clk_i = 1;
+	top->reset_i = 1;
+	top->eval();
+	main_time++;
+#if VM_TRACE
+	vcd->dump(main_time);
+#endif
+
+	top->clk_i = 0;
+	top->reset_i = 0;
+
 	while ((main_time <= 2 * max_ticks + 1) && !Verilated::gotFinish()) {
 		top->eval();
 		main_time++;

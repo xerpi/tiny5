@@ -1,5 +1,6 @@
 module top(
-	input logic clk_i
+	input logic clk_i,
+	input logic reset_i
 );
 	logic [31:0] mem_rd_addr;
 	logic [31:0] mem_rd_data;
@@ -18,6 +19,7 @@ module top(
 
 	datapath dp(
 		.clk_i(clk_i),
+		.reset_i(reset_i),
 		/* Memory interface */
 		.mem_rd_addr_o(mem_rd_addr),
 		.mem_rd_data_i(mem_rd_data),

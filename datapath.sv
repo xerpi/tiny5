@@ -1,5 +1,8 @@
+import definitions::*;
+
 module datapath(
 	input logic clk_i,
+	input logic reset_i,
 	/* Memory interface */
 	output logic [31:0] mem_rd_addr_o,
 	input logic [31:0] mem_rd_data_i,
@@ -50,6 +53,7 @@ module datapath(
 
 	control ctrl(
 		.clk_i(clk_i),
+		.reset_i(reset_i),
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
 		.ir_we_o(ctrl_ir_we),

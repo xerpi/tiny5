@@ -13,13 +13,11 @@ module mem_tb(
 	input logic [31:0] wr_data_i,
 	input logic wr_enable_i
 );
+	assign rd_data_o = mem_read32(rd_addr_i);
 
 	always_ff @(posedge clk_i) begin
 		if (wr_enable_i) begin
 			mem_write32(wr_addr_i, wr_data_i);
 		end
-
-		rd_data_o <= mem_read32(rd_addr_i);
 	end
-
 endmodule

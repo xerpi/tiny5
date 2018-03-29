@@ -14,8 +14,12 @@ module datapath(
 	logic [31:0] pc;
 	logic [31:0] ir;
 
+	/* nets */
+	instruction_t instr;
 	logic [31:0] next_pc;
 	logic [31:0] next_ir;
+	logic [31:0] alu_din1;
+	logic [31:0] alu_din2;
 
 	/* regfile inputs */
 	logic [31:0] rf_rin;
@@ -26,11 +30,14 @@ module datapath(
 
 	/* control outputs */
 	logic ctrl_pc_we;
+	logic ctrl_ir_we;
+	logic ctrl_regfile_we;
 	next_pc_sel_t ctrl_next_pc_sel;
 	regfile_in_sel_t ctrl_regfile_in_sel;
-	logic ctrl_ir_we;
-	logic ctrl_mem_rd_addr_sel;
+	mem_rd_addr_sel_t ctrl_mem_rd_addr_sel;
 	alu_op_t ctrl_alu_op;
+	alu_in1_sel_t ctrl_alu_in1_sel;
+	alu_in2_sel_t ctrl_alu_in2_sel;
 
 	/* alu outputs */
 	logic [31:0] alu_dout;
@@ -40,13 +47,15 @@ module datapath(
 	assign mem_wr_data_o = 'h11223344;
 	assign mem_wr_enable_o = 0;
 
+	assign instr = ir;
+
 	regfile rf(
 		.clk_i(clk_i),
 		.rs1_i(1),
 		.rs2_i(1),
 		.rd_i(1),
 		.rin_i(rf_rin),
-		.we_i(1),
+		.we_i(ctrl_regfile_we),
 		.rout1_o(rf_rout1),
 		.rout2_o(rf_rout2)
 	);
@@ -57,16 +66,19 @@ module datapath(
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
 		.ir_we_o(ctrl_ir_we),
-		.alu_op_o(ctrl_alu_op),
+		.regfile_we_o(ctrl_regfile_we),
 		.next_pc_sel_o(ctrl_next_pc_sel),
 		.regfile_in_sel_o(ctrl_regfile_in_sel),
-		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel)
+		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
+		.alu_op_o(ctrl_alu_op),
+		.alu_in1_sel_o(ctrl_alu_in1_sel),
+		.alu_in2_sel_o(ctrl_alu_in2_sel)
 	);
 
 	alu al(
 		.alu_op_i(ctrl_alu_op),
-		.din1_i(rf_rout1),
-		.din2_i(rf_rout2),
+		.din1_i(alu_din1),
+		.din2_i(alu_din2),
 		.dout_o(alu_dout)
 	);
 
@@ -88,6 +100,18 @@ module datapath(
 			mem_rd_addr_o = pc;
 		MEM_RD_ADDR_SEL_ALU_OUT:
 			mem_rd_addr_o = alu_dout;
+		endcase
+
+		unique case (ctrl_alu_in1_sel)
+		ALU_IN1_SEL_REGFILE_OUT1:
+			alu_din1 = rf_rout1;
+		ALU_IN1_SEL_IR_UTYPE_IMM:
+			alu_din1 = {instr.utype.imm, 12'b0};
+		endcase
+
+		unique case (ctrl_alu_in2_sel)
+		ALU_IN2_SEL_REGFILE_OUT2:
+			alu_din2 = rf_rout2;
 		endcase
 
 		next_ir = mem_rd_data_i;

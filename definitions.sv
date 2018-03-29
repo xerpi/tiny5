@@ -123,7 +123,16 @@ typedef enum logic {
 } mem_rd_addr_sel_t;
 
 typedef enum logic {
-	ALU_OP_LUI
+	ALU_IN1_SEL_REGFILE_OUT1,
+	ALU_IN1_SEL_IR_UTYPE_IMM
+} alu_in1_sel_t;
+
+typedef enum logic {
+	ALU_IN2_SEL_REGFILE_OUT2
+} alu_in2_sel_t;
+
+typedef enum logic {
+	ALU_OP_IN1_PASSTHROUGH
 } alu_op_t;
 
 endpackage

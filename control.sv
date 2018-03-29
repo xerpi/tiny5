@@ -65,6 +65,21 @@ module control(
 				end
 				endcase
 			end
+			OPCODE_OP: begin
+				case (instr.rtype.funct3)
+				FUNCT3_OP_ADD_SUB: begin
+					logic [6:0] funct7 = instr.rtype.funct7;
+					regfile_we_o = 1;
+					regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+					alu_in2_sel_o = ALU_IN2_SEL_REGFILE_OUT2;
+					if (funct7[5] == 0)
+						alu_op_o = ALU_OP_ADD;
+					else
+						alu_op_o = ALU_OP_SUB;
+				end
+				endcase
+			end
 			endcase
 		end
 	end

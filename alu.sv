@@ -12,6 +12,8 @@ module alu(
 			dout_o = din2_i;
 		ALU_OP_ADD:
 			dout_o = din1_i + din2_i;
+		ALU_OP_SUB:
+			dout_o = din1_i - din2_i;
 		endcase
 	end
 endmodule;

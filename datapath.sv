@@ -51,9 +51,9 @@ module datapath(
 
 	regfile rf(
 		.clk_i(clk_i),
-		.rs1_i(1),
-		.rs2_i(1),
-		.rd_i(1),
+		.rs1_i(instr.common.rs1),
+		.rs2_i(instr.common.rs2),
+		.rd_i(instr.common.rd),
 		.rin_i(rf_rin),
 		.we_i(ctrl_regfile_we),
 		.rout1_o(rf_rout1),
@@ -105,13 +105,17 @@ module datapath(
 		unique case (ctrl_alu_in1_sel)
 		ALU_IN1_SEL_REGFILE_OUT1:
 			alu_din1 = rf_rout1;
-		ALU_IN1_SEL_IR_UTYPE_IMM:
-			alu_din1 = {instr.utype.imm, 12'b0};
 		endcase
 
 		unique case (ctrl_alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
 			alu_din2 = rf_rout2;
+		ALU_IN2_SEL_IR_UTYPE_IMM:
+			alu_din2 = {instr.utype.imm, 12'b0};
+		ALU_IN2_SEL_IR_ITYPE_IMM: begin
+			logic [11:0] imm = instr.itype.imm;
+			alu_din2 = {{20{imm[11]}}, imm};
+		end
 		endcase
 
 		next_ir = mem_rd_data_i;

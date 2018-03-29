@@ -8,8 +8,10 @@ module alu(
 );
 	always_comb begin
 		case (alu_op_i)
-		ALU_OP_IN1_PASSTHROUGH:
-			dout_o = din1_i;
+		ALU_OP_IN2_PASSTHROUGH:
+			dout_o = din2_i;
+		ALU_OP_ADD:
+			dout_o = din1_i + din2_i;
 		endcase
 	end
 endmodule;

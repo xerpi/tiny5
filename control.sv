@@ -44,15 +44,26 @@ module control(
 
 	/* Current instruction driven output logic (decoder) */
 	always_comb begin
-		if (state == DEMW) begin
-			regfile_we_o = 0;
+		regfile_we_o = 0;
 
-			case (instr.opcode)
+		if (state == DEMW) begin
+			case (instr.common.opcode)
 			OPCODE_LUI: begin
 				regfile_we_o = 1;
 				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
-				alu_op_o = ALU_OP_IN1_PASSTHROUGH;
-				alu_in1_sel_o = ALU_IN1_SEL_IR_UTYPE_IMM;
+				alu_op_o = ALU_OP_IN2_PASSTHROUGH;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
+			end
+			OPCODE_OP_IMM: begin
+				case (instr.itype.funct3)
+				FUNCT3_OP_IMM_ADDI: begin
+					regfile_we_o = 1;
+					regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+					alu_op_o = ALU_OP_ADD;
+					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+					alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+				end
+				endcase
 			end
 			endcase
 		end

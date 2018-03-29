@@ -36,7 +36,14 @@ typedef struct packed {
 
 typedef union packed {
 	logic [31:0] bits;
-	logic [6:0] opcode;
+	struct packed {
+		logic [31:25] skip1;
+		logic [24:20] rs2;
+		logic [19:15] rs1;
+		logic [14:12] skip0;
+		logic [11:7] rd;
+		logic [6:0] opcode;
+	} common;
 	instruction_rtype_t rtype;
 	instruction_itype_t itype;
 	instruction_stype_t stype;
@@ -123,16 +130,18 @@ typedef enum logic {
 } mem_rd_addr_sel_t;
 
 typedef enum logic {
-	ALU_IN1_SEL_REGFILE_OUT1,
-	ALU_IN1_SEL_IR_UTYPE_IMM
+	ALU_IN1_SEL_REGFILE_OUT1
 } alu_in1_sel_t;
 
-typedef enum logic {
-	ALU_IN2_SEL_REGFILE_OUT2
+typedef enum logic [1:0] {
+	ALU_IN2_SEL_REGFILE_OUT2,
+	ALU_IN2_SEL_IR_UTYPE_IMM,
+	ALU_IN2_SEL_IR_ITYPE_IMM
 } alu_in2_sel_t;
 
 typedef enum logic {
-	ALU_OP_IN1_PASSTHROUGH
+	ALU_OP_IN2_PASSTHROUGH,
+	ALU_OP_ADD
 } alu_op_t;
 
 endpackage

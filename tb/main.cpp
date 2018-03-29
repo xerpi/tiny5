@@ -7,6 +7,10 @@
 #include VTOP_MODULE_HEADER
 #include VTOP_MODULE_DPI_HEADER
 
+#ifndef TRACE_FILE
+#define TRACE_FILE "trace.vcd"
+#endif
+
 #define DEFAULT_TICKS 1000
 
 static void usage(char *argv[]);
@@ -255,7 +259,7 @@ int main(int argc, char *argv[])
 
 	Verilated::commandArgs(argc, argv);
 
-	tiny5tb->enableTracing("trace.vcd");
+	tiny5tb->enableTracing(TRACE_FILE);
 	tiny5tb->resetTick();
 
 	while ((tiny5tb->getTimeStamp() < 2 * max_ticks) && !Verilated::gotFinish()) {

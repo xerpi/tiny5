@@ -139,10 +139,18 @@ typedef enum logic [1:0] {
 	ALU_IN2_SEL_IR_ITYPE_IMM
 } alu_in2_sel_t;
 
-typedef enum logic [1:0] {
+typedef enum logic [3:0] {
 	ALU_OP_IN2_PASSTHROUGH,
 	ALU_OP_ADD,
-	ALU_OP_SUB
+	ALU_OP_SUB,
+	ALU_OP_SLL,
+	ALU_OP_SLT,
+	ALU_OP_SLTU,
+	ALU_OP_XOR,
+	ALU_OP_SRL,
+	ALU_OP_SRA,
+	ALU_OP_OR,
+	ALU_OP_AND
 } alu_op_t;
 
 endpackage

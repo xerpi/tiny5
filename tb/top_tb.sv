@@ -1,4 +1,4 @@
-module top(
+module top_tb(
 	input logic clk_i,
 	input logic reset_i
 );

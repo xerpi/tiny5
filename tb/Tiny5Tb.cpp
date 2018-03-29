@@ -1,6 +1,6 @@
 #include "Tiny5Tb.hpp"
 
-Tiny5Tb::Tiny5Tb(Vtop *top) :
+Tiny5Tb::Tiny5Tb(VTOP_MODULE *top) :
 	top(top), timeStamp(0), vcd(nullptr)
 {
 }

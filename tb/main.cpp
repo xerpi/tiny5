@@ -3,8 +3,9 @@
 #include <getopt.h>
 #include <verilated.h>
 #include "Tiny5Tb.hpp"
-#include "Vtop.h"
-#include "Vtop__Dpi.h"
+#include "top_module.h"
+#include VTOP_MODULE_HEADER
+#include VTOP_MODULE_DPI_HEADER
 
 #define DEFAULT_TICKS 1000
 
@@ -202,12 +203,12 @@ int main(int argc, char *argv[])
 	};
 
 	int opt;
-	Vtop *top;
+	VTOP_MODULE *top;
 	int ret = 0;
 	uint64_t max_ticks = DEFAULT_TICKS;
 	bool early_exit = false;
 
-	top = new Vtop;
+	top = new VTOP_MODULE;
 	if (!top)
 		return -1;
 

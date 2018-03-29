@@ -5,11 +5,12 @@
 #include <map>
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "Vtop.h"
+#include "top_module.h"
+#include VTOP_MODULE_HEADER
 
 class Tiny5Tb {
 public:
-	Tiny5Tb(Vtop *top);
+	Tiny5Tb(VTOP_MODULE *top);
 	~Tiny5Tb();
 
 	void resetTick(void);
@@ -26,7 +27,7 @@ public:
 	void memWrite32(uint32_t address, uint32_t data);
 
 private:
-	Vtop *top;
+	VTOP_MODULE *top;
 	uint64_t timeStamp;
 	std::map<uint32_t, uint8_t> mem;
 	VerilatedVcdC *vcd;

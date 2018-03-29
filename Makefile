@@ -39,7 +39,7 @@ test.elf: $(TEST_SOURCES)
 	@riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
 
 disasm_test: test.elf
-	@riscv64-unknown-elf-objdump -d $^
+	@riscv64-unknown-elf-objdump -M numeric,no-aliases -d $^
 
 view: top.svg
 	@inkview top.svg 2> /dev/null &

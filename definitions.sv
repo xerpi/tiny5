@@ -166,7 +166,8 @@ typedef enum logic [2:0] {
 	ALU_IN2_SEL_IR_UTYPE_IMM,
 	ALU_IN2_SEL_IR_ITYPE_IMM,
 	ALU_IN2_SEL_IR_JTYPE_IMM,
-	ALU_IN2_SEL_IR_BTYPE_IMM
+	ALU_IN2_SEL_IR_BTYPE_IMM,
+	ALU_IN2_SEL_IR_STYPE_IMM
 } alu_in2_sel_t;
 
 typedef enum logic [3:0] {

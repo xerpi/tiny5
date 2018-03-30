@@ -12,6 +12,7 @@ module control(
 	output mem_rd_addr_sel_t mem_rd_addr_sel_o,
 	output mem_access_size_t mem_rd_size_o,
 	output mem_access_size_t mem_wr_size_o,
+	output logic mem_wr_enable_o,
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
 	output alu_in2_sel_t alu_in2_sel_o,
@@ -54,6 +55,7 @@ module control(
 		next_pc_sel_o = NEXT_PC_SEL_PC_4;
 		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
+		mem_wr_enable_o = 0;
 
 		if (state == DEMW) begin
 			priority case (instr.common.opcode)
@@ -129,6 +131,21 @@ module control(
 					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT16;
 				FUNCT3_LOAD_LW, FUNCT3_LOAD_LBU, FUNCT3_LOAD_LHU:
 					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD;
+				endcase
+			end
+			OPCODE_STORE: begin
+				mem_wr_enable_o = 1;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_STYPE_IMM;
+
+				priority case (instr.itype.funct3)
+				FUNCT3_STORE_SB:
+					mem_wr_size_o = MEM_ACCESS_SIZE_BYTE;
+				FUNCT3_STORE_SH:
+					mem_wr_size_o = MEM_ACCESS_SIZE_HALF;
+				FUNCT3_STORE_SW:
+					mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
 				endcase
 			end
 			OPCODE_OP_IMM: begin

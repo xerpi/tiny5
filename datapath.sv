@@ -48,11 +48,6 @@ module datapath(
 	/* compare unit outputs */
 	logic cmp_unit_res;
 
-	/* TODOs */
-	assign mem_wr_addr_o = 0;
-	assign mem_wr_data_o = 'h11223344;
-	assign mem_wr_enable_o = 0;
-
 	assign instr = ir;
 
 	regfile rf(
@@ -78,6 +73,7 @@ module datapath(
 		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
 		.mem_rd_size_o(mem_rd_size_o),
 		.mem_wr_size_o(mem_wr_size_o),
+		.mem_wr_enable_o(mem_wr_enable_o),
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
 		.alu_in2_sel_o(ctrl_alu_in2_sel),
@@ -99,6 +95,9 @@ module datapath(
 	);
 
 	always_comb begin
+		mem_wr_addr_o = alu_dout;
+		mem_wr_data_o = rf_rout2;
+
 		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
@@ -153,6 +152,9 @@ module datapath(
 			alu_din2 = {{19{instr.btype.imm12}}, instr.btype.imm12,
 				instr.btype.imm11, instr.btype.imm5,
 				instr.btype.imm1, 1'b0};
+		ALU_IN2_SEL_IR_STYPE_IMM:
+			alu_din2 = {{20{instr.stype.imm5[6]}}, instr.stype.imm5,
+				instr.stype.imm0};
 		endcase
 
 		next_ir = mem_rd_data_i;

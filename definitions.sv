@@ -137,9 +137,10 @@ typedef enum logic [2:0] {
 
 /* tiny5 definitions */
 
-typedef enum logic {
+typedef enum logic [1:0] {
 	NEXT_PC_SEL_PC_4,
-	NEXT_PC_SEL_ALU_OUT
+	NEXT_PC_SEL_ALU_OUT,
+	NEXT_PC_SEL_COMPARE_UNIT_OUT
 } next_pc_sel_t;
 
 typedef enum logic {
@@ -157,11 +158,12 @@ typedef enum logic {
 	ALU_IN1_SEL_PC
 } alu_in1_sel_t;
 
-typedef enum logic [1:0] {
+typedef enum logic [2:0] {
 	ALU_IN2_SEL_REGFILE_OUT2,
 	ALU_IN2_SEL_IR_UTYPE_IMM,
 	ALU_IN2_SEL_IR_ITYPE_IMM,
-	ALU_IN2_SEL_IR_JTYPE_IMM
+	ALU_IN2_SEL_IR_JTYPE_IMM,
+	ALU_IN2_SEL_IR_BTYPE_IMM
 } alu_in2_sel_t;
 
 typedef enum logic [3:0] {
@@ -177,5 +179,14 @@ typedef enum logic [3:0] {
 	ALU_OP_OR,
 	ALU_OP_AND
 } alu_op_t;
+
+typedef enum logic [2:0] {
+	COMPARE_UNIT_OP_EQ,
+	COMPARE_UNIT_OP_NE,
+	COMPARE_UNIT_OP_LT,
+	COMPARE_UNIT_OP_GE,
+	COMPARE_UNIT_OP_LTU,
+	COMPARE_UNIT_OP_GEU
+} compare_unit_op_t;
 
 endpackage

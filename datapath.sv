@@ -38,9 +38,13 @@ module datapath(
 	alu_op_t ctrl_alu_op;
 	alu_in1_sel_t ctrl_alu_in1_sel;
 	alu_in2_sel_t ctrl_alu_in2_sel;
+	compare_unit_op_t ctrl_compare_unit_op;
 
 	/* alu outputs */
 	logic [31:0] alu_dout;
+
+	/* compare unit outputs */
+	logic cmp_unit_res;
 
 	/* TODOs */
 	assign mem_wr_addr_o = 0;
@@ -72,7 +76,8 @@ module datapath(
 		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
-		.alu_in2_sel_o(ctrl_alu_in2_sel)
+		.alu_in2_sel_o(ctrl_alu_in2_sel),
+		.compare_unit_op_o(ctrl_compare_unit_op)
 	);
 
 	alu al(
@@ -82,12 +87,24 @@ module datapath(
 		.dout_o(alu_dout)
 	);
 
+	compare_unit cmp_unit(
+		.compare_unit_op_i(ctrl_compare_unit_op),
+		.in1_i(rf_rout1),
+		.in2_i(rf_rout2),
+		.res_o(cmp_unit_res)
+	);
+
 	always_comb begin
 		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
 		NEXT_PC_SEL_ALU_OUT:
 			next_pc = alu_dout;
+		NEXT_PC_SEL_COMPARE_UNIT_OUT:
+			if (cmp_unit_res == 0)
+				next_pc = pc + 4;
+			else
+				next_pc = alu_dout;
 		endcase
 
 		priority case (ctrl_regfile_in_sel)
@@ -122,6 +139,10 @@ module datapath(
 			alu_din2 = {{11{instr.jtype.imm20}}, instr.jtype.imm20,
 				instr.jtype.imm12, instr.jtype.imm11,
 				instr.jtype.imm1, 1'b0};
+		ALU_IN2_SEL_IR_BTYPE_IMM:
+			alu_din2 = {{19{instr.btype.imm12}}, instr.btype.imm12,
+				instr.btype.imm11, instr.btype.imm5,
+				instr.btype.imm1, 1'b0};
 		endcase
 
 		next_ir = mem_rd_data_i;

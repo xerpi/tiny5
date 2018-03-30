@@ -12,7 +12,8 @@ module control(
 	output mem_rd_addr_sel_t mem_rd_addr_sel_o,
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
-	output alu_in2_sel_t alu_in2_sel_o
+	output alu_in2_sel_t alu_in2_sel_o,
+	output compare_unit_op_t compare_unit_op_o
 );
 	enum logic [1:0] {
 		RESET,
@@ -80,6 +81,27 @@ module control(
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
 				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+			end
+			OPCODE_BRANCH: begin
+				next_pc_sel_o = NEXT_PC_SEL_COMPARE_UNIT_OUT;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_PC;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_BTYPE_IMM;
+
+				priority case (instr.btype.funct3)
+				FUNCT3_BRANCH_BEQ:
+					compare_unit_op_o = COMPARE_UNIT_OP_EQ;
+				FUNCT3_BRANCH_BNE:
+					compare_unit_op_o = COMPARE_UNIT_OP_NE;
+				FUNCT3_BRANCH_BLT:
+					compare_unit_op_o = COMPARE_UNIT_OP_LT;
+				FUNCT3_BRANCH_BGE:
+					compare_unit_op_o = COMPARE_UNIT_OP_GE;
+				FUNCT3_BRANCH_BLTU:
+					compare_unit_op_o = COMPARE_UNIT_OP_LTU;
+				FUNCT3_BRANCH_BGEU:
+					compare_unit_op_o = COMPARE_UNIT_OP_GEU;
+				endcase
 			end
 			OPCODE_OP_IMM: begin
 				regfile_we_o = 1;

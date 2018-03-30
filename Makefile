@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 TOP_MODULE = top_tb
 TRACE_FILE = trace.vcd
 
-SV_SOURCES = definitions.sv alu.sv control.sv datapath.sv regfile.sv
+SV_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv datapath.sv regfile.sv
 SV_TB_SOURCES = tb/top_tb.sv tb/mem_tb.sv
 CC_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
 TEST_SOURCES = test/start.s

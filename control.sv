@@ -10,6 +10,8 @@ module control(
 	output next_pc_sel_t next_pc_sel_o,
 	output regfile_in_sel_t regfile_in_sel_o,
 	output mem_rd_addr_sel_t mem_rd_addr_sel_o,
+	output mem_access_size_t mem_rd_size_o,
+	output mem_access_size_t mem_wr_size_o,
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
 	output alu_in2_sel_t alu_in2_sel_o,
@@ -50,6 +52,8 @@ module control(
 		/* Defaults */
 		regfile_we_o = 0;
 		next_pc_sel_o = NEXT_PC_SEL_PC_4;
+		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
+		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
 
 		if (state == DEMW) begin
 			priority case (instr.common.opcode)
@@ -101,6 +105,30 @@ module control(
 					compare_unit_op_o = COMPARE_UNIT_OP_LTU;
 				FUNCT3_BRANCH_BGEU:
 					compare_unit_op_o = COMPARE_UNIT_OP_GEU;
+				endcase
+			end
+			OPCODE_LOAD: begin
+				regfile_we_o = 1;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+
+				priority case (instr.itype.funct3)
+				FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
+					mem_rd_size_o = MEM_ACCESS_SIZE_BYTE;
+				FUNCT3_LOAD_LH, FUNCT3_LOAD_LHU:
+					mem_rd_size_o = MEM_ACCESS_SIZE_HALF;
+				FUNCT3_LOAD_LW:
+					mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
+				endcase
+
+				priority case (instr.itype.funct3)
+				FUNCT3_LOAD_LB:
+					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT8;
+				FUNCT3_LOAD_LH:
+					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT16;
+				FUNCT3_LOAD_LW, FUNCT3_LOAD_LBU, FUNCT3_LOAD_LHU:
+					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD;
 				endcase
 			end
 			OPCODE_OP_IMM: begin

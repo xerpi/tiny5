@@ -143,9 +143,12 @@ typedef enum logic [1:0] {
 	NEXT_PC_SEL_COMPARE_UNIT_OUT
 } next_pc_sel_t;
 
-typedef enum logic {
+typedef enum logic [2:0] {
 	REGFILE_IN_SEL_ALU_OUT,
-	REGFILE_IN_SEL_PC_4
+	REGFILE_IN_SEL_PC_4,
+	REGFILE_IN_SEL_MEM_RD,
+	REGFILE_IN_SEL_MEM_RD_SEXT8,
+	REGFILE_IN_SEL_MEM_RD_SEXT16
 } regfile_in_sel_t;
 
 typedef enum logic {
@@ -188,5 +191,11 @@ typedef enum logic [2:0] {
 	COMPARE_UNIT_OP_LTU,
 	COMPARE_UNIT_OP_GEU
 } compare_unit_op_t;
+
+typedef enum logic [1:0] {
+	MEM_ACCESS_SIZE_BYTE,
+	MEM_ACCESS_SIZE_HALF,
+	MEM_ACCESS_SIZE_WORD
+} mem_access_size_t;
 
 endpackage

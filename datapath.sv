@@ -4,10 +4,12 @@ module datapath(
 	input logic clk_i,
 	input logic reset_i,
 	/* Memory interface */
-	output logic [31:0] mem_rd_addr_o,
 	input logic [31:0] mem_rd_data_i,
+	output logic [31:0] mem_rd_addr_o,
+	output mem_access_size_t mem_rd_size_o,
 	output logic [31:0] mem_wr_addr_o,
 	output logic [31:0] mem_wr_data_o,
+	output mem_access_size_t mem_wr_size_o,
 	output logic mem_wr_enable_o
 );
 	/* registers */
@@ -74,6 +76,8 @@ module datapath(
 		.next_pc_sel_o(ctrl_next_pc_sel),
 		.regfile_in_sel_o(ctrl_regfile_in_sel),
 		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
+		.mem_rd_size_o(mem_rd_size_o),
+		.mem_wr_size_o(mem_wr_size_o),
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
 		.alu_in2_sel_o(ctrl_alu_in2_sel),
@@ -112,6 +116,12 @@ module datapath(
 			rf_rin = alu_dout;
 		REGFILE_IN_SEL_PC_4:
 			rf_rin = pc + 4;
+		REGFILE_IN_SEL_MEM_RD:
+			rf_rin = mem_rd_data_i;
+		REGFILE_IN_SEL_MEM_RD_SEXT8:
+			rf_rin = {{24{mem_rd_data_i[7]}}, mem_rd_data_i[7:0]};
+		REGFILE_IN_SEL_MEM_RD_SEXT16:
+			rf_rin = {{16{mem_rd_data_i[15]}}, mem_rd_data_i[15:0]};
 		endcase
 
 		priority case (ctrl_mem_rd_addr_sel)

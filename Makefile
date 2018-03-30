@@ -15,14 +15,14 @@ TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
 
 all: verilate
 
-obj_dir/$(VTOP): $(SV_TB_SOURCES) $(SV_SOURCES) $(CC_TB_SOURCES)
+obj_dir/$(VTOP): $(SV_SOURCES) $(SV_TB_SOURCES) $(CC_TB_SOURCES)
 	$(VERILATOR) $(VERILATOR_FLAGS) --trace --cc --exe $^ --top-module $(TOP_MODULE)
 	make -j4 -k -C obj_dir -f $(VTOP).mk $(VTOP)
 
 verilate: obj_dir/$(VTOP)
 
 lint:
-	@$(VERILATOR) -Wall --lint-only $(SV_TB_SOURCES) $(SV_SOURCES)
+	@$(VERILATOR) -Wall --lint-only $(SV_SOURCES) $(SV_TB_SOURCES)
 
 run: obj_dir/$(VTOP) test.bin
 	@obj_dir/$(VTOP) -l addr=0x00000000,file=test.bin $(ARGS)

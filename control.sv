@@ -82,14 +82,31 @@ module control(
 				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
 			end
 			OPCODE_OP_IMM: begin
+				regfile_we_o = 1;
+				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+
 				priority case (instr.itype.funct3)
-				FUNCT3_OP_IMM_ADDI: begin
-					regfile_we_o = 1;
-					regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+				FUNCT3_OP_IMM_ADDI:
 					alu_op_o = ALU_OP_ADD;
-					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
-					alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
-				end
+				FUNCT3_OP_IMM_SLTI:
+					alu_op_o = ALU_OP_SLT;
+				FUNCT3_OP_IMM_SLTIU:
+					alu_op_o = ALU_OP_SLTU;
+				FUNCT3_OP_IMM_XORI:
+					alu_op_o = ALU_OP_XOR;
+				FUNCT3_OP_IMM_ORI:
+					alu_op_o = ALU_OP_OR;
+				FUNCT3_OP_IMM_ANDI:
+					alu_op_o = ALU_OP_AND;
+				FUNCT3_OP_IMM_SLLI:
+					alu_op_o = ALU_OP_SLL;
+				FUNCT3_OP_IMM_SRI:
+					if (instr.itype.imm[10] == 0)
+						alu_op_o = ALU_OP_SRL;
+					else
+						alu_op_o = ALU_OP_SRA;
 				endcase
 			end
 			OPCODE_OP: begin
@@ -118,10 +135,10 @@ module control(
 						alu_op_o = ALU_OP_SRL;
 					else
 						alu_op_o = ALU_OP_SRA;
-				FUNCT3_OP_AND:
-					alu_op_o = ALU_OP_AND;
 				FUNCT3_OP_OR:
 					alu_op_o = ALU_OP_OR;
+				FUNCT3_OP_AND:
+					alu_op_o = ALU_OP_AND;
 				endcase
 			end
 			endcase

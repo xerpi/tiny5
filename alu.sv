@@ -32,4 +32,4 @@ module alu(
 			dout_o = din1_i & din2_i;
 		endcase
 	end
-endmodule;
+endmodule

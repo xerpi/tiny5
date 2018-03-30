@@ -22,4 +22,4 @@ module compare_unit(
 			res_o = in1_i >= in2_i;
 		endcase
 	end
-endmodule;
+endmodule

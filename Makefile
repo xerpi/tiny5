@@ -33,13 +33,13 @@ gtkwave: $(TRACE_FILE)
 	@gtkwave $(TRACE_FILE) trace.sav
 
 test.bin: test.elf
-	@riscv64-unknown-elf-objcopy -S -O binary $^ $@
+	riscv64-unknown-elf-objcopy -S -O binary $^ $@
 
 test.elf: $(TEST_SOURCES)
-	@riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
 
 disasm_test: test.elf
-	@riscv64-unknown-elf-objdump -M numeric,no-aliases -d $^
+	@riscv64-unknown-elf-objdump -M numeric,no-aliases -D $^
 
 view: top.svg
 	@inkview top.svg 2> /dev/null &

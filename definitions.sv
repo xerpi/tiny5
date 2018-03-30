@@ -3,45 +3,45 @@ package definitions;
 /* RISC-V ISA definitions */
 
 typedef struct packed {
-	logic [31:25] funct7;
-	logic [24:20] rs2;
-	logic [19:15] rs1;
-	logic [14:12] funct3;
-	logic [11:7] rd;
+	logic [6:0] funct7;
+	logic [4:0] rs2;
+	logic [4:0] rs1;
+	logic [2:0] funct3;
+	logic [4:0] rd;
 	logic [6:0] opcode;
 } instruction_rtype_t;
 
 typedef struct packed {
-	logic [31:20] imm;
-	logic [19:15] rs1;
-	logic [14:12] funct3;
-	logic [11:7] rd;
+	logic [11:0] imm;
+	logic [4:0] rs1;
+	logic [2:0] funct3;
+	logic [4:0] rd;
 	logic [6:0] opcode;
 } instruction_itype_t;
 
 typedef struct packed {
-	logic [31:25] imm;
-	logic [24:20] rs2;
-	logic [19:15] rs1;
-	logic [14:12] funct3;
-	logic [11:7] imm0;
+	logic [6:0] imm;
+	logic [4:0] rs2;
+	logic [4:0] rs1;
+	logic [2:0] funct3;
+	logic [4:0] imm0;
 	logic [6:0] opcode;
 } instruction_stype_t;
 
 typedef struct packed {
-	logic [31:12] imm;
-	logic [11:7] rd;
+	logic [19:0] imm;
+	logic [4:0] rd;
 	logic [6:0] opcode;
 } instruction_utype_t;
 
 typedef union packed {
 	logic [31:0] bits;
 	struct packed {
-		logic [31:25] skip1;
-		logic [24:20] rs2;
-		logic [19:15] rs1;
-		logic [14:12] skip0;
-		logic [11:7] rd;
+		logic [6:0] skip1;
+		logic [4:0] rs2;
+		logic [4:0] rs1;
+		logic [2:0] skip0;
+		logic [4:0] rd;
 		logic [6:0] opcode;
 	} common;
 	instruction_rtype_t rtype;

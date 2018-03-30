@@ -113,8 +113,7 @@ module datapath(
 		ALU_IN2_SEL_IR_UTYPE_IMM:
 			alu_din2 = {instr.utype.imm, 12'b0};
 		ALU_IN2_SEL_IR_ITYPE_IMM: begin
-			logic [11:0] imm = instr.itype.imm;
-			alu_din2 = {{20{imm[11]}}, imm};
+			alu_din2 = {{20{instr.itype.imm[11]}}, instr.itype.imm};
 		end
 		endcase
 

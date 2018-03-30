@@ -83,31 +83,33 @@ module datapath(
 	);
 
 	always_comb begin
-		unique case (ctrl_next_pc_sel)
+		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC:
 			next_pc = pc;
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
 		endcase
 
-		unique case (ctrl_regfile_in_sel)
+		priority case (ctrl_regfile_in_sel)
 		REGFILE_IN_SEL_ALU_OUT:
 			rf_rin = alu_dout;
 		endcase
 
-		unique case (ctrl_mem_rd_addr_sel)
+		priority case (ctrl_mem_rd_addr_sel)
 		MEM_RD_ADDR_SEL_PC:
 			mem_rd_addr_o = pc;
 		MEM_RD_ADDR_SEL_ALU_OUT:
 			mem_rd_addr_o = alu_dout;
 		endcase
 
-		unique case (ctrl_alu_in1_sel)
+		priority case (ctrl_alu_in1_sel)
 		ALU_IN1_SEL_REGFILE_OUT1:
 			alu_din1 = rf_rout1;
+		ALU_IN1_SEL_PC:
+			alu_din1 = pc;
 		endcase
 
-		unique case (ctrl_alu_in2_sel)
+		priority case (ctrl_alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
 			alu_din2 = rf_rout2;
 		ALU_IN2_SEL_IR_UTYPE_IMM:

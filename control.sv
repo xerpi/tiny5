@@ -28,7 +28,12 @@ module control(
 
 	/* Current state driven output logic */
 	always_comb begin
-		unique case (state)
+		priority case (state)
+		RESET: begin
+			pc_we_o = 0;
+			ir_we_o = 0;
+			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
+		end
 		FETCH: begin
 			pc_we_o = 0;
 			ir_we_o = 1;
@@ -47,15 +52,22 @@ module control(
 		regfile_we_o = 0;
 
 		if (state == DEMW) begin
-			case (instr.common.opcode)
+			priority case (instr.common.opcode)
 			OPCODE_LUI: begin
 				regfile_we_o = 1;
 				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
 				alu_op_o = ALU_OP_IN2_PASSTHROUGH;
 				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
 			end
+			OPCODE_AUIPC: begin
+				regfile_we_o = 1;
+				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_PC;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
+			end
 			OPCODE_OP_IMM: begin
-				case (instr.itype.funct3)
+				priority case (instr.itype.funct3)
 				FUNCT3_OP_IMM_ADDI: begin
 					regfile_we_o = 1;
 					regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
@@ -71,7 +83,7 @@ module control(
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
 				alu_in2_sel_o = ALU_IN2_SEL_REGFILE_OUT2;
 
-				case (instr.rtype.funct3)
+				priority case (instr.rtype.funct3)
 				FUNCT3_OP_ADD_SUB: begin
 					if (instr.rtype.funct7[5] == 0)
 						alu_op_o = ALU_OP_ADD;

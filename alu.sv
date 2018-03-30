@@ -7,7 +7,7 @@ module alu(
 	output logic [31:0] dout_o
 );
 	always_comb begin
-		case (alu_op_i)
+		priority case (alu_op_i)
 		ALU_OP_IN2_PASSTHROUGH:
 			dout_o = din2_i;
 		ALU_OP_ADD:

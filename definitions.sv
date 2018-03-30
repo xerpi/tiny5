@@ -130,7 +130,8 @@ typedef enum logic {
 } mem_rd_addr_sel_t;
 
 typedef enum logic {
-	ALU_IN1_SEL_REGFILE_OUT1
+	ALU_IN1_SEL_REGFILE_OUT1,
+	ALU_IN1_SEL_PC
 } alu_in1_sel_t;
 
 typedef enum logic [1:0] {

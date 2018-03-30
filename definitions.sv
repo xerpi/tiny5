@@ -20,7 +20,7 @@ typedef struct packed {
 } instruction_itype_t;
 
 typedef struct packed {
-	logic [6:0] imm;
+	logic [6:0] imm5;
 	logic [4:0] rs2;
 	logic [4:0] rs1;
 	logic [2:0] funct3;
@@ -29,10 +29,30 @@ typedef struct packed {
 } instruction_stype_t;
 
 typedef struct packed {
+	logic imm12;
+	logic [5:0] imm5;
+	logic [4:0] rs2;
+	logic [4:0] rs1;
+	logic [2:0] funct3;
+	logic [3:0] imm1;
+	logic imm11;
+	logic [6:0] opcode;
+} instruction_btype_t;
+
+typedef struct packed {
 	logic [19:0] imm;
 	logic [4:0] rd;
 	logic [6:0] opcode;
 } instruction_utype_t;
+
+typedef struct packed {
+	logic imm20;
+	logic [9:0] imm1;
+	logic imm11;
+	logic [7:0] imm12;
+	logic [4:0] rd;
+	logic [6:0] opcode;
+} instruction_jtype_t;
 
 typedef union packed {
 	logic [31:0] bits;
@@ -47,7 +67,9 @@ typedef union packed {
 	instruction_rtype_t rtype;
 	instruction_itype_t itype;
 	instruction_stype_t stype;
+	instruction_btype_t btype;
 	instruction_utype_t utype;
+	instruction_jtype_t jtype;
 } instruction_t;
 
 typedef enum logic [6:0] {
@@ -116,12 +138,13 @@ typedef enum logic [2:0] {
 /* tiny5 definitions */
 
 typedef enum logic {
-	NEXT_PC_SEL_PC,
-	NEXT_PC_SEL_PC_4
+	NEXT_PC_SEL_PC_4,
+	NEXT_PC_SEL_ALU_OUT
 } next_pc_sel_t;
 
 typedef enum logic {
-	REGFILE_IN_SEL_ALU_OUT
+	REGFILE_IN_SEL_ALU_OUT,
+	REGFILE_IN_SEL_PC_4
 } regfile_in_sel_t;
 
 typedef enum logic {
@@ -137,7 +160,8 @@ typedef enum logic {
 typedef enum logic [1:0] {
 	ALU_IN2_SEL_REGFILE_OUT2,
 	ALU_IN2_SEL_IR_UTYPE_IMM,
-	ALU_IN2_SEL_IR_ITYPE_IMM
+	ALU_IN2_SEL_IR_ITYPE_IMM,
+	ALU_IN2_SEL_IR_JTYPE_IMM
 } alu_in2_sel_t;
 
 typedef enum logic [3:0] {

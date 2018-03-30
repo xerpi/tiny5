@@ -84,15 +84,17 @@ module datapath(
 
 	always_comb begin
 		priority case (ctrl_next_pc_sel)
-		NEXT_PC_SEL_PC:
-			next_pc = pc;
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
+		NEXT_PC_SEL_ALU_OUT:
+			next_pc = alu_dout;
 		endcase
 
 		priority case (ctrl_regfile_in_sel)
 		REGFILE_IN_SEL_ALU_OUT:
 			rf_rin = alu_dout;
+		REGFILE_IN_SEL_PC_4:
+			rf_rin = pc + 4;
 		endcase
 
 		priority case (ctrl_mem_rd_addr_sel)
@@ -114,9 +116,12 @@ module datapath(
 			alu_din2 = rf_rout2;
 		ALU_IN2_SEL_IR_UTYPE_IMM:
 			alu_din2 = {instr.utype.imm, 12'b0};
-		ALU_IN2_SEL_IR_ITYPE_IMM: begin
+		ALU_IN2_SEL_IR_ITYPE_IMM:
 			alu_din2 = {{20{instr.itype.imm[11]}}, instr.itype.imm};
-		end
+		ALU_IN2_SEL_IR_JTYPE_IMM:
+			alu_din2 = {{11{instr.jtype.imm20}}, instr.jtype.imm20,
+				instr.jtype.imm12, instr.jtype.imm11,
+				instr.jtype.imm1, 1'b0};
 		endcase
 
 		next_ir = mem_rd_data_i;

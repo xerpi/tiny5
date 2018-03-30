@@ -23,9 +23,6 @@ module control(
 	instruction_t instr;
 	assign instr = ir_i;
 
-	/* TODOs */
-	assign next_pc_sel_o = NEXT_PC_SEL_PC_4;
-
 	/* Current state driven output logic */
 	always_comb begin
 		priority case (state)
@@ -49,7 +46,9 @@ module control(
 
 	/* Current instruction driven output logic (decoder) */
 	always_comb begin
+		/* Defaults */
 		regfile_we_o = 0;
+		next_pc_sel_o = NEXT_PC_SEL_PC_4;
 
 		if (state == DEMW) begin
 			priority case (instr.common.opcode)
@@ -65,6 +64,22 @@ module control(
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_PC;
 				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
+			end
+			OPCODE_JAL: begin
+				next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
+				regfile_we_o = 1;
+				regfile_in_sel_o = REGFILE_IN_SEL_PC_4;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_PC;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_JTYPE_IMM;
+			end
+			OPCODE_JALR: begin
+				next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
+				regfile_we_o = 1;
+				regfile_in_sel_o = REGFILE_IN_SEL_PC_4;
+				alu_op_o = ALU_OP_ADD;
+				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
 			end
 			OPCODE_OP_IMM: begin
 				priority case (instr.itype.funct3)

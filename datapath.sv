@@ -3,14 +3,7 @@ import definitions::*;
 module datapath(
 	input logic clk_i,
 	input logic reset_i,
-	/* Memory interface */
-	input logic [31:0] mem_rd_data_i,
-	output logic [31:0] mem_rd_addr_o,
-	output mem_access_size_t mem_rd_size_o,
-	output logic [31:0] mem_wr_addr_o,
-	output logic [31:0] mem_wr_data_o,
-	output mem_access_size_t mem_wr_size_o,
-	output logic mem_wr_enable_o
+	mem_if.slave memif
 );
 	/* registers */
 	logic [31:0] pc;
@@ -71,9 +64,9 @@ module datapath(
 		.next_pc_sel_o(ctrl_next_pc_sel),
 		.regfile_in_sel_o(ctrl_regfile_in_sel),
 		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
-		.mem_rd_size_o(mem_rd_size_o),
-		.mem_wr_size_o(mem_wr_size_o),
-		.mem_wr_enable_o(mem_wr_enable_o),
+		.mem_rd_size_o(memif.rd_size),
+		.mem_wr_size_o(memif.wr_size),
+		.mem_wr_enable_o(memif.wr_enable),
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
 		.alu_in2_sel_o(ctrl_alu_in2_sel),
@@ -95,8 +88,8 @@ module datapath(
 	);
 
 	always_comb begin
-		mem_wr_addr_o = alu_dout;
-		mem_wr_data_o = rf_rout2;
+		memif.wr_addr = alu_dout;
+		memif.wr_data = rf_rout2;
 
 		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC_4:
@@ -116,18 +109,18 @@ module datapath(
 		REGFILE_IN_SEL_PC_4:
 			rf_rin = pc + 4;
 		REGFILE_IN_SEL_MEM_RD:
-			rf_rin = mem_rd_data_i;
+			rf_rin = memif.rd_data;
 		REGFILE_IN_SEL_MEM_RD_SEXT8:
-			rf_rin = {{24{mem_rd_data_i[7]}}, mem_rd_data_i[7:0]};
+			rf_rin = {{24{memif.rd_data[7]}}, memif.rd_data[7:0]};
 		REGFILE_IN_SEL_MEM_RD_SEXT16:
-			rf_rin = {{16{mem_rd_data_i[15]}}, mem_rd_data_i[15:0]};
+			rf_rin = {{16{memif.rd_data[15]}}, memif.rd_data[15:0]};
 		endcase
 
 		priority case (ctrl_mem_rd_addr_sel)
 		MEM_RD_ADDR_SEL_PC:
-			mem_rd_addr_o = pc;
+			memif.rd_addr = pc;
 		MEM_RD_ADDR_SEL_ALU_OUT:
-			mem_rd_addr_o = alu_dout;
+			memif.rd_addr = alu_dout;
 		endcase
 
 		priority case (ctrl_alu_in1_sel)
@@ -157,17 +150,22 @@ module datapath(
 				instr.stype.imm0};
 		endcase
 
-		next_ir = mem_rd_data_i;
+		next_ir = memif.rd_data;
 	end
 
 	/* Next PC/IR logic */
 	always_ff @(posedge clk_i) begin
-		if (ctrl_pc_we) begin
-			pc <= next_pc;
-		end
+		if (reset_i) begin
+			pc <= 0;
+			ir <= 0;
+		end else begin
+			if (ctrl_pc_we) begin
+				pc <= next_pc;
+			end
 
-		if (ctrl_ir_we) begin
-			ir <= next_ir;
+			if (ctrl_ir_we) begin
+				ir <= next_ir;
+			end
 		end
 	end
 endmodule

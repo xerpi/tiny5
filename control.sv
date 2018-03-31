@@ -50,12 +50,18 @@ module control(
 
 	/* Current instruction driven output logic (decoder) */
 	always_comb begin
-		/* Defaults */
+		/* Strict defaults */
 		regfile_we_o = 0;
 		next_pc_sel_o = NEXT_PC_SEL_PC_4;
 		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_enable_o = 0;
+
+		/* Don't care defaults */
+		regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
+		alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+		alu_in2_sel_o = ALU_IN2_SEL_REGFILE_OUT2;
+		compare_unit_op_o = COMPARE_UNIT_OP_EQ;
 
 		if (state == DEMW) begin
 			priority case (instr.common.opcode)

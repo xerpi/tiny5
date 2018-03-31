@@ -7,36 +7,30 @@ import "DPI-C" function shortint unsigned mem_read16(input int unsigned address)
 import "DPI-C" function void mem_write32(input int unsigned address, input int unsigned data);
 import "DPI-C" function int unsigned mem_read32(input int unsigned address);
 
-module mem_tb(
+module dpi_mem(
 	input logic clk_i,
-	input logic [31:0] rd_addr_i,
-	input mem_access_size_t rd_size_i,
-	input logic [31:0] wr_addr_i,
-	input logic [31:0] wr_data_i,
-	input mem_access_size_t wr_size_i,
-	input logic wr_enable_i,
-	output logic [31:0] rd_data_o
+	mem_if.master memif
 );
 	always_comb begin
-		priority case (rd_size_i)
+		priority case (memif.rd_size)
 		MEM_ACCESS_SIZE_BYTE:
-			rd_data_o = {24'b0, mem_read8(rd_addr_i)};
+			memif.rd_data = {24'b0, mem_read8(memif.rd_addr)};
 		MEM_ACCESS_SIZE_HALF:
-			rd_data_o = {16'b0, mem_read16(rd_addr_i)};
+			memif.rd_data = {16'b0, mem_read16(memif.rd_addr)};
 		MEM_ACCESS_SIZE_WORD:
-			rd_data_o = mem_read32(rd_addr_i);
+			memif.rd_data = mem_read32(memif.rd_addr);
 		endcase
 	end
 
 	always_ff @(posedge clk_i) begin
-		if (wr_enable_i) begin
-			priority case (wr_size_i)
+		if (memif.wr_enable) begin
+			priority case (memif.wr_size)
 			MEM_ACCESS_SIZE_BYTE:
-				mem_write8(wr_addr_i, wr_data_i[7:0]);
+				mem_write8(memif.wr_addr, memif.wr_data[7:0]);
 			MEM_ACCESS_SIZE_HALF:
-				mem_write16(wr_addr_i, wr_data_i[15:0]);
+				mem_write16(memif.wr_addr, memif.wr_data[15:0]);
 			MEM_ACCESS_SIZE_WORD:
-				mem_write32(wr_addr_i, wr_data_i);
+				mem_write32(memif.wr_addr, memif.wr_data);
 			endcase
 		end
 	end

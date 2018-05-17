@@ -82,7 +82,8 @@ typedef enum logic [6:0] {
 	OPCODE_STORE    = 7'b0100011,
 	OPCODE_OP_IMM   = 7'b0010011,
 	OPCODE_OP       = 7'b0110011,
-	OPCODE_MISC_MEM = 7'b0001111
+	OPCODE_MISC_MEM = 7'b0001111,
+	OPCODE_SYSTEM   = 7'b1110011
 } opcode_t;
 
 typedef enum logic [2:0] {
@@ -133,7 +134,16 @@ typedef enum logic [2:0] {
 typedef enum logic [2:0] {
 	FUNCT3_MISC_MEM_FENCE   = 3'b000,
 	FUNCT3_MISC_MEM_FENCE_I = 3'b001
-} funct3_miscm_mem_t;
+} funct3_misc_mem_t;
+
+typedef enum logic [2:0] {
+	FUNCT3_SYSTEM_CSRRW  = 3'b001,
+	FUNCT3_SYSTEM_CSRRS  = 3'b010,
+	FUNCT3_SYSTEM_CSRRC  = 3'b011,
+	FUNCT3_SYSTEM_CSRRWI = 3'b101,
+	FUNCT3_SYSTEM_CSRRSI = 3'b110,
+	FUNCT3_SYSTEM_CSRRCI = 3'b111
+} funct3_system_t;
 
 /* tiny5 definitions */
 

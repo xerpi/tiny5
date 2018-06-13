@@ -34,12 +34,16 @@ module datapath(
 	alu_in1_sel_t ctrl_alu_in1_sel;
 	alu_in2_sel_t ctrl_alu_in2_sel;
 	compare_unit_op_t ctrl_compare_unit_op;
+	logic ctrl_csr_we;
 
 	/* alu outputs */
 	logic [31:0] alu_dout;
 
 	/* compare unit outputs */
 	logic cmp_unit_res;
+
+	/* CSR outputs */
+	logic [31:0] csr_dout;
 
 	assign instr = ir;
 
@@ -70,7 +74,8 @@ module datapath(
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
 		.alu_in2_sel_o(ctrl_alu_in2_sel),
-		.compare_unit_op_o(ctrl_compare_unit_op)
+		.compare_unit_op_o(ctrl_compare_unit_op),
+		.csr_we_o(ctrl_csr_we)
 	);
 
 	alu al(
@@ -85,6 +90,15 @@ module datapath(
 		.in1_i(rf_rout1),
 		.in2_i(rf_rout2),
 		.res_o(cmp_unit_res)
+	);
+
+	csr csr(
+		.clk_i(clk_i),
+		.reset_i(reset_i),
+		.sel_i(instr.itype.imm),
+		.din_i(alu_dout),
+		.we_i(ctrl_csr_we),
+		.dout_o(csr_dout)
 	);
 
 	always_comb begin
@@ -114,6 +128,8 @@ module datapath(
 			rf_rin = {{24{memif.rd_data[7]}}, memif.rd_data[7:0]};
 		REGFILE_IN_SEL_MEM_RD_SEXT16:
 			rf_rin = {{16{memif.rd_data[15]}}, memif.rd_data[15:0]};
+		REGFILE_IN_SEL_CSR_OUT:
+			rf_rin = csr_dout;
 		endcase
 
 		priority case (ctrl_mem_rd_addr_sel)
@@ -128,6 +144,8 @@ module datapath(
 			alu_din1 = rf_rout1;
 		ALU_IN1_SEL_PC:
 			alu_din1 = pc;
+		ALU_IN1_SEL_IR_CSR_UIMM:
+			alu_din1 = {27'b0, instr.itype.rs1};
 		endcase
 
 		priority case (ctrl_alu_in2_sel)
@@ -148,6 +166,8 @@ module datapath(
 		ALU_IN2_SEL_IR_STYPE_IMM:
 			alu_din2 = {{20{instr.stype.imm5[6]}}, instr.stype.imm5,
 				instr.stype.imm0};
+		ALU_IN2_SEL_CSR_OUT:
+			alu_din2 = csr_dout;
 		endcase
 
 		next_ir = memif.rd_data;

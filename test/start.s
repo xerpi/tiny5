@@ -1,6 +1,12 @@
 	.text
 	.global _start
 _start:
+	csrr x1, cycle
+	csrr x2, cycle
+	csrr x3, cycle
+	csrr x4, cycle
+	csrr x5, cycle
+
 	li x1, 0xAA00
 	li x2, 0xBB
 	add x3, x2, x1

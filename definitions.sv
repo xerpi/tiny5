@@ -145,6 +145,15 @@ typedef enum logic [2:0] {
 	FUNCT3_SYSTEM_CSRRCI = 3'b111
 } funct3_system_t;
 
+typedef enum logic [11:0] {
+	CSR_REG_CYCLE    = 12'hC00,
+	CSR_REG_TIME     = 12'hC01,
+	CSR_REG_INSTRET  = 12'hC02,
+	CSR_REG_CYCLEH   = 12'hC80,
+	CSR_REG_TIMEH    = 12'hC81,
+	CSR_REG_INSTRETH = 12'hC82
+} csr_reg_t;
+
 /* tiny5 definitions */
 
 typedef enum logic [1:0] {
@@ -158,7 +167,8 @@ typedef enum logic [2:0] {
 	REGFILE_IN_SEL_PC_4,
 	REGFILE_IN_SEL_MEM_RD,
 	REGFILE_IN_SEL_MEM_RD_SEXT8,
-	REGFILE_IN_SEL_MEM_RD_SEXT16
+	REGFILE_IN_SEL_MEM_RD_SEXT16,
+	REGFILE_IN_SEL_CSR_OUT
 } regfile_in_sel_t;
 
 typedef enum logic {
@@ -166,9 +176,10 @@ typedef enum logic {
 	MEM_RD_ADDR_SEL_ALU_OUT
 } mem_rd_addr_sel_t;
 
-typedef enum logic {
+typedef enum logic [1:0] {
 	ALU_IN1_SEL_REGFILE_OUT1,
-	ALU_IN1_SEL_PC
+	ALU_IN1_SEL_PC,
+	ALU_IN1_SEL_IR_CSR_UIMM
 } alu_in1_sel_t;
 
 typedef enum logic [2:0] {
@@ -177,10 +188,12 @@ typedef enum logic [2:0] {
 	ALU_IN2_SEL_IR_ITYPE_IMM,
 	ALU_IN2_SEL_IR_JTYPE_IMM,
 	ALU_IN2_SEL_IR_BTYPE_IMM,
-	ALU_IN2_SEL_IR_STYPE_IMM
+	ALU_IN2_SEL_IR_STYPE_IMM,
+	ALU_IN2_SEL_CSR_OUT
 } alu_in2_sel_t;
 
 typedef enum logic [3:0] {
+	ALU_OP_IN1_PASSTHROUGH,
 	ALU_OP_IN2_PASSTHROUGH,
 	ALU_OP_ADD,
 	ALU_OP_SUB,

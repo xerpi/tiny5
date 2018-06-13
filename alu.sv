@@ -8,6 +8,8 @@ module alu(
 );
 	always_comb begin
 		priority case (alu_op_i)
+		ALU_OP_IN1_PASSTHROUGH:
+			dout_o = din1_i;
 		ALU_OP_IN2_PASSTHROUGH:
 			dout_o = din2_i;
 		ALU_OP_ADD:

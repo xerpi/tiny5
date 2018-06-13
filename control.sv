@@ -16,7 +16,8 @@ module control(
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
 	output alu_in2_sel_t alu_in2_sel_o,
-	output compare_unit_op_t compare_unit_op_o
+	output compare_unit_op_t compare_unit_op_o,
+	output logic csr_we_o
 );
 	enum logic [1:0] {
 		RESET,
@@ -56,6 +57,7 @@ module control(
 		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_enable_o = 0;
+		csr_we_o = 0;
 
 		/* Don't care defaults */
 		regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
@@ -212,6 +214,42 @@ module control(
 					alu_op_o = ALU_OP_OR;
 				FUNCT3_OP_AND:
 					alu_op_o = ALU_OP_AND;
+				endcase
+			end
+			OPCODE_SYSTEM: begin
+				regfile_we_o = 1;
+				csr_we_o = 1;
+				regfile_in_sel_o = REGFILE_IN_SEL_CSR_OUT;
+
+				priority case (instr.itype.funct3)
+				FUNCT3_SYSTEM_CSRRW: begin
+					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+					alu_op_o = ALU_OP_IN1_PASSTHROUGH;
+				end
+				FUNCT3_SYSTEM_CSRRS: begin
+					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_op_o = ALU_OP_OR;
+				end
+				FUNCT3_SYSTEM_CSRRC: begin
+					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
+					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_op_o = ALU_OP_XOR;
+				end
+				FUNCT3_SYSTEM_CSRRWI: begin
+					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_op_o = ALU_OP_IN1_PASSTHROUGH;
+				end
+				FUNCT3_SYSTEM_CSRRSI: begin
+					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_op_o = ALU_OP_OR;
+				end
+				FUNCT3_SYSTEM_CSRRCI: begin
+					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_op_o = ALU_OP_XOR;
+				end
 				endcase
 			end
 			endcase

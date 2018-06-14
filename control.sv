@@ -216,6 +216,14 @@ module control(
 					alu_op_o = ALU_OP_AND;
 				endcase
 			end
+			OPCODE_MISC_MEM: begin
+				priority case (instr.itype.funct3)
+				FUNCT3_MISC_MEM_FENCE:
+					; /* do nothing */
+				FUNCT3_MISC_MEM_FENCE_I:
+					; /* do nothing */
+				endcase
+			end
 			OPCODE_SYSTEM: begin
 				regfile_we_o = 1;
 				csr_we_o = 1;

@@ -1,3 +1,5 @@
+import definitions::*;
+
 module csr(
 	input logic clk_i,
 	input logic reset_i,
@@ -42,11 +44,11 @@ module csr(
 			reg_cycle <= next_cycle;
 
 			if (we_i) begin
-				priority case (sel_i)
-				/* TODO: Implement writable registers
+				/*priority case (sel_i)
+				TODO: Implement writable registers
 				CSR_REG_FOO:
-					reg_foo[31:0] <= din_i;*/
-				endcase
+					reg_foo[31:0] <= din_i;
+				endcase*/
 			end
 		end
 	end

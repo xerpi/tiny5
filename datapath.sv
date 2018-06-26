@@ -176,7 +176,7 @@ module datapath(
 	/* Next PC/IR logic */
 	always_ff @(posedge clk_i) begin
 		if (reset_i) begin
-			pc <= 0;
+			pc <= 'h00010000;
 			ir <= 0;
 		end else begin
 			if (ctrl_pc_we) begin

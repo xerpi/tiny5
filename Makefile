@@ -13,7 +13,7 @@ MODELSIM_SOURCES = $(COMMON_SOURCES) simple_mem.sv top_simple_mem.sv
 TEST_SOURCES = test/start.s
 
 VERILATOR_VTOP = V$(VERILATOR_TOP_MODULE)
-CFLAGS = -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
+CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
 VERILATOR_FLAGS = -Wno-fatal -Wall -CFLAGS "$(CFLAGS)"
 TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
 
@@ -30,7 +30,7 @@ lint:
 	@$(VERILATOR) -Wall --lint-only $(VERILATOR_SOURCES)
 
 run: obj_dir/$(VERILATOR_VTOP) test.bin
-	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00000000,file=test.bin $(ARGS)
+	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)
 
 $(TRACE_FILE): run
 

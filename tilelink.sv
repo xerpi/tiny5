@@ -5,12 +5,12 @@ interface tilelink #(
 ) (input logic clk_i);
 
 	typedef enum logic [2:0] {
-		MESSAGE_CHANNEL_A_GET = 4,
-		MESSAGE_CHANNEL_A_PUT_FULL = 0,
-		MESSAGE_CHANNEL_A_PUT_PARTIAL = 1,
-		MESSAGE_CHANNEL_D_ACCESS_ACK_DATA = 1,
-		MESSAGE_CHANNEL_D_ACCESS_ACK = 0
-	} messages_t;
+		TL_MESSAGE_CHANNEL_A_GET = 4,
+		TL_MESSAGE_CHANNEL_A_PUT_FULL = 0,
+		TL_MESSAGE_CHANNEL_A_PUT_PARTIAL = 1,
+		TL_MESSAGE_CHANNEL_D_ACCESS_ACK_DATA = 1,
+		TL_MESSAGE_CHANNEL_D_ACCESS_ACK = 0
+	} tl_message_t;
 
 	struct packed {
 		logic [    2 : 0] opcode;
@@ -22,7 +22,7 @@ interface tilelink #(
 		logic [8 * w : 0] data;
 		logic valid;
 		logic ready;
-	} channel_A;
+	} tl_channel_A;
 
 	struct packed {
 		logic [    2 : 0] opcode;
@@ -34,14 +34,14 @@ interface tilelink #(
 		logic error;
 		logic valid;
 		logic ready;
-	} channel_D;
+	} tl_channel_D;
 
 	task Get(input logic [a - 1 : 0] address,
 		 input logic [o - 1 : 0] source,
 		 input logic [z - 1 : 0] size,
 		 input logic [w - 1 : 0] mask);
 
-		channel_A.opcode = MESSAGE_CHANNEL_A_GET;
+		channel_A.opcode = TL_MESSAGE_CHANNEL_A_GET;
 		channel_A.param = 0;
 		channel_A.size = size;
 		channel_A.source = source;
@@ -59,7 +59,7 @@ interface tilelink #(
 		 	    input logic [w - 1 : 0] mask,
 		 	    input logic [8 * w : 0] data);
 
-		channel_A.opcode = MESSAGE_CHANNEL_A_PUT_PARTIAL;
+		channel_A.opcode = TL_MESSAGE_CHANNEL_A_PUT_PARTIAL;
 		channel_A.param = 0;
 		channel_A.size = size;
 		channel_A.source = source;

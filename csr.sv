@@ -4,7 +4,7 @@ module csr(
 	input logic clk_i,
 	input logic reset_i,
 	input logic [11:0] sel_i,
-	input logic [31:0] din_i,
+	/* input logic [31:0] din_i, */
 	input logic we_i,
 	output logic [31:0] dout_o
 );

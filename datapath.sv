@@ -96,7 +96,7 @@ module datapath(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
 		.sel_i(instr.itype.imm),
-		.din_i(alu_dout),
+		/* .din_i(alu_dout), */
 		.we_i(ctrl_csr_we),
 		.dout_o(csr_dout)
 	);

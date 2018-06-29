@@ -47,7 +47,7 @@ module datapath(
 
 	assign instr = ir;
 
-	regfile rf(
+	regfile regfile(
 		.clk_i(clk_i),
 		.rs1_i(instr.common.rs1),
 		.rs2_i(instr.common.rs2),
@@ -58,9 +58,10 @@ module datapath(
 		.rout2_o(rf_rout2)
 	);
 
-	control ctrl(
+	control control(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
+		.error_i(0),
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
 		.ir_we_o(ctrl_ir_we),
@@ -78,7 +79,7 @@ module datapath(
 		.csr_we_o(ctrl_csr_we)
 	);
 
-	alu al(
+	alu alu(
 		.alu_op_i(ctrl_alu_op),
 		.din1_i(alu_din1),
 		.din2_i(alu_din2),

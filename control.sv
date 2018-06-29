@@ -3,6 +3,7 @@ import definitions::*;
 module control(
 	input logic clk_i,
 	input logic reset_i,
+	input logic error_i,
 	input logic [31:0] ir_i,
 	output logic pc_we_o,
 	output logic ir_we_o,
@@ -22,8 +23,9 @@ module control(
 	enum logic [1:0] {
 		RESET,
 		FETCH,
-		DEMW
-	} state;
+		DEMW,
+		ERROR
+	} state, next_state;
 
 	instruction_t instr;
 	assign instr = ir_i;
@@ -45,6 +47,10 @@ module control(
 			pc_we_o = 1;
 			ir_we_o = 0;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
+		end
+		ERROR: begin
+			pc_we_o = 0;
+			ir_we_o = 0;
 		end
 		endcase
 	end
@@ -264,17 +270,26 @@ module control(
 		end
 	end
 
-	/* Next state logic */
+	/* Next state combinational logic */
+	always_comb begin
+		if (error_i) begin
+			next_state = ERROR;
+		end else begin
+			priority case (state)
+			FETCH:
+				next_state = DEMW;
+			RESET, DEMW:
+				next_state = FETCH;
+			endcase
+		end
+	end
+
+	/* Next state sequential logic */
 	always_ff @(posedge clk_i) begin
 		if (reset_i) begin
 			state <= RESET;
 		end else begin
-			priority case (state)
-			FETCH:
-				state <= DEMW;
-			RESET, DEMW:
-				state <= FETCH;
-			endcase
+			state <= next_state;
 		end
 	end
 endmodule

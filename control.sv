@@ -275,11 +275,13 @@ module control(
 		if (error_i) begin
 			next_state = ERROR;
 		end else begin
-			priority case (state)
+			case (state)
 			FETCH:
 				next_state = DEMW;
 			RESET, DEMW:
 				next_state = FETCH;
+			ERROR:
+				next_state = ERROR;
 			endcase
 		end
 	end

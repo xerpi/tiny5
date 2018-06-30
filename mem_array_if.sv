@@ -1,6 +1,6 @@
 import definitions::*;
 
-interface mem_if();
+interface mem_array_if();
 	logic [31:0] rd_addr;
 	logic [31:0] rd_data;
 	mem_access_size_t rd_size;

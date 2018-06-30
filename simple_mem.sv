@@ -5,7 +5,7 @@ module simple_mem #(
 	parameter MEM_SIZE = 64 * 1024
 ) (
 	input logic clk_i,
-	mem_if.master memif
+	mem_array_if.master memif
 );
 	logic [7:0] memory[MEM_SIZE:0];
 

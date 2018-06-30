@@ -3,7 +3,7 @@ import definitions::*;
 module datapath(
 	input logic clk_i,
 	input logic reset_i,
-	mem_if.slave memif
+	mem_array_if.slave memif
 );
 	/* registers */
 	logic [31:0] pc;

@@ -154,6 +154,19 @@ typedef enum logic [11:0] {
 	CSR_REG_INSTRETH = 12'hC82
 } csr_reg_t;
 
+/* TileLink definitions */
+
+typedef enum logic [2:0] {
+	TL_CHANNEL_A_OPCODE_GET = 4,
+	TL_CHANNEL_A_OPCODE_PUT_FULL_DATA = 0,
+	TL_CHANNEL_A_OPCODE_PUT_PARTIAL_DATA = 1
+} tl_channel_a_opcode_t;
+
+typedef enum logic [2:0] {
+	TL_CHANNEL_D_OPCODE_ACCESS_ACK_DATA = 1,
+	TL_CHANNEL_D_OPCODE_ACCESS_ACK = 0
+} tl_channel_d_opcode_t;
+
 /* tiny5 definitions */
 
 typedef enum logic [1:0] {

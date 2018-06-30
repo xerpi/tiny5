@@ -3,18 +3,6 @@ import definitions::*;
 interface tilelink #(
 	w = 4, a = 32, z = 4, o = 1, i = 1
 ) (input logic clk_i);
-
-	typedef enum logic [2:0] {
-		TL_CHANNEL_A_OPCODE_GET = 4,
-		TL_CHANNEL_A_OPCODE_PUT_FULL = 0,
-		TL_CHANNEL_A_OPCODE_PUT_PARTIAL = 1
-	} tl_channel_a_opcode_t;
-
-	typedef enum logic [2:0] {
-		TL_CHANNEL_D_OPCODE_ACCESS_ACK_DATA = 1,
-		TL_CHANNEL_D_OPCODE_ACCESS_ACK = 0
-	} tl_channel_d_opcode_t;
-
 	/* Channel A signals */
 	logic [    2 : 0] a_opcode;
 	logic [    2 : 0] a_param;
@@ -57,7 +45,7 @@ interface tilelink #(
 		 	    input logic [w - 1 : 0] mask,
 		 	    input logic [8 * w : 0] data);
 
-		a_opcode = TL_CHANNEL_A_OPCODE_PUT_PARTIAL;
+		a_opcode = TL_CHANNEL_A_OPCODE_PUT_PARTIAL_DATA;
 		a_param = 0;
 		a_size = size;
 		a_source = source;
@@ -75,7 +63,7 @@ interface tilelink #(
 		 	 input logic [w - 1 : 0] mask,
 		 	 input logic [8 * w : 0] data);
 
-		a_opcode = TL_CHANNEL_A_OPCODE_PUT_FULL;
+		a_opcode = TL_CHANNEL_A_OPCODE_PUT_FULL_DATA;
 		a_param = 0;
 		a_size = size;
 		a_source = source;

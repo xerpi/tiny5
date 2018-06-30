@@ -9,7 +9,7 @@ import "DPI-C" function int unsigned mem_read32(input int unsigned address);
 
 module dpi_mem(
 	input logic clk_i,
-	memory_array_interface.slave memif
+	tinymemif.slave memif
 );
 	always_comb begin
 		priority case (memif.rd_size)

@@ -4,7 +4,7 @@ module tl_memory_controller_slave(
 	input logic clk_i,
 	input logic reset_i,
 	tilelink.slave_ul tilelink,
-	memory_array_interface.master memif
+	tinymemif.master memif
 );
 	enum logic [1:0] {
 		READY,

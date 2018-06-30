@@ -4,7 +4,7 @@ module top_dpi_mem(
 	input logic clk_i,
 	input logic reset_i
 );
-	memory_array_interface memif();
+	tinymemif memif();
 
 	dpi_mem mem(
 		.clk_i(clk_i),

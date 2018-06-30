@@ -1,6 +1,6 @@
 import definitions::*;
 
-interface memory_array_interface();
+interface tinymemif();
 	logic [31:0] rd_addr;
 	logic [31:0] rd_data;
 	mem_access_size_t rd_size;

@@ -5,7 +5,8 @@ MODELSIM_TOP_MODULE = top_simple_mem
 TRACE_FILE = trace.vcd
 
 COMMON_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
-	datapath.sv mem_array_if.sv regfile.sv csr.sv tilelink.sv
+	datapath.sv regfile.sv csr.sv memory_array_interface.sv \
+	tilelink.sv tl_memory_controller.sv
 
 VERILATOR_SOURCES = $(COMMON_SOURCES) top_dpi_mem.sv dpi_mem.sv
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
@@ -27,7 +28,7 @@ obj_dir/$(VERILATOR_VTOP): $(VERILATOR_SOURCES) $(VERILATOR_TB_SOURCES)
 verilate: obj_dir/$(VERILATOR_VTOP)
 
 lint:
-	@$(VERILATOR) -Wall --lint-only $(VERILATOR_SOURCES)
+	@$(VERILATOR) -Wall --lint-only $(VERILATOR_SOURCES) --top-module $(VERILATOR_TOP_MODULE)
 
 run: obj_dir/$(VERILATOR_VTOP) test.bin
 	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)

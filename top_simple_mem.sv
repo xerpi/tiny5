@@ -4,7 +4,7 @@ module top_simple_mem(
 	input logic clk_i,
 	input logic reset_i
 );
-	mem_array_if memif();
+	memory_array_interface memif();
 
 	simple_mem mem(
 		.clk_i(clk_i),

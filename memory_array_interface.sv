@@ -1,6 +1,6 @@
 import definitions::*;
 
-interface mem_array_if();
+interface memory_array_interface();
 	logic [31:0] rd_addr;
 	logic [31:0] rd_data;
 	mem_access_size_t rd_size;
@@ -10,16 +10,6 @@ interface mem_array_if();
 	logic wr_enable;
 
 	modport master(
-		input rd_addr,
-		output rd_data,
-		input rd_size,
-		input wr_addr,
-		input wr_data,
-		input wr_size,
-		input wr_enable
-	);
-
-	modport slave(
 		output rd_addr,
 		input rd_data,
 		output rd_size,
@@ -27,5 +17,15 @@ interface mem_array_if();
 		output wr_data,
 		output wr_size,
 		output wr_enable
+	);
+
+	modport slave(
+		input rd_addr,
+		output rd_data,
+		input rd_size,
+		input wr_addr,
+		input wr_data,
+		input wr_size,
+		input wr_enable
 	);
 endinterface

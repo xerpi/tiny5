@@ -12,17 +12,20 @@ module control(
 	output regfile_in_sel_t regfile_in_sel_o,
 	output mem_rd_addr_sel_t mem_rd_addr_sel_o,
 	output mem_access_size_t mem_rd_size_o,
+	output logic mem_rd_enable_o,
 	output mem_access_size_t mem_wr_size_o,
 	output logic mem_wr_enable_o,
+	input logic mem_busy_i,
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
 	output alu_in2_sel_t alu_in2_sel_o,
 	output compare_unit_op_t compare_unit_op_o,
 	output logic csr_we_o
 );
-	enum logic [1:0] {
+	enum logic [2:0] {
 		RESET,
-		FETCH,
+		FETCH_ISSUE,
+		FETCH_WAIT,
 		DEMW,
 		ERROR
 	} state, next_state;
@@ -30,7 +33,10 @@ module control(
 	instruction_t instr;
 	assign instr = ir_i;
 
-	/* Current state driven output logic */
+	logic halt;
+	assign halt = mem_busy_i;
+
+	/* Current-state-only driven output logic */
 	always_comb begin
 		priority case (state)
 		RESET: begin
@@ -38,7 +44,12 @@ module control(
 			ir_we_o = 0;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
 		end
-		FETCH: begin
+		FETCH_ISSUE: begin
+			pc_we_o = 0;
+			ir_we_o = 0;
+			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
+		end
+		FETCH_WAIT: begin
 			pc_we_o = 0;
 			ir_we_o = 1;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
@@ -55,13 +66,14 @@ module control(
 		endcase
 	end
 
-	/* Current instruction driven output logic (decoder) */
+	/* Current instruction (and state) driven output logic (decoder) */
 	always_comb begin
 		/* Strict defaults */
 		regfile_we_o = 0;
 		next_pc_sel_o = NEXT_PC_SEL_PC_4;
 		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
 		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
+		mem_rd_enable_o = 0;
 		mem_wr_enable_o = 0;
 		csr_we_o = 0;
 
@@ -71,7 +83,9 @@ module control(
 		alu_in2_sel_o = ALU_IN2_SEL_REGFILE_OUT2;
 		compare_unit_op_o = COMPARE_UNIT_OP_EQ;
 
-		if (state == DEMW) begin
+		if (state == FETCH_ISSUE) begin
+			mem_rd_enable_o = 1;
+		end if (state == DEMW) begin
 			priority case (instr.common.opcode)
 			OPCODE_LUI: begin
 				regfile_we_o = 1;
@@ -125,6 +139,7 @@ module control(
 			end
 			OPCODE_LOAD: begin
 				regfile_we_o = 1;
+				mem_rd_enable_o = 1;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
 				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
@@ -275,11 +290,18 @@ module control(
 		if (error_i) begin
 			next_state = ERROR;
 		end else begin
-			case (state)
-			FETCH:
-				next_state = DEMW;
+			priority case (state)
+			FETCH_ISSUE:
+				next_state = FETCH_WAIT;
+			FETCH_WAIT: begin
+				if (halt) begin
+					next_state = FETCH_WAIT;
+				end else begin
+					next_state = DEMW;
+				end
+			end
 			RESET, DEMW:
-				next_state = FETCH;
+				next_state = FETCH_ISSUE;
 			ERROR:
 				next_state = ERROR;
 			endcase

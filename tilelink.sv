@@ -2,7 +2,7 @@ import definitions::*;
 
 interface tilelink #(
 	w = 4, a = 32, z = 4, o = 1, i = 1
-) (input logic clk_i);
+);
 	/* Channel A signals */
 	logic [    2 : 0] a_opcode;
 	logic [    2 : 0] a_param;
@@ -10,7 +10,7 @@ interface tilelink #(
 	logic [o - 1 : 0] a_source;
 	logic [a - 1 : 0] a_address;
 	logic [w - 1 : 0] a_mask;
-	logic [8 * w : 0] a_data;
+	logic [8 * w - 1 : 0] a_data;
 	logic a_valid;
 	logic a_ready;
 
@@ -20,7 +20,7 @@ interface tilelink #(
 	logic [z - 1 : 0] d_size;
 	logic [o - 1 : 0] d_source;
 	logic [i - 1 : 0] d_sink;
-	logic [8 * w : 0] d_data;
+	logic [8 * w - 1 : 0] d_data;
 	logic d_error;
 	logic d_valid;
 	logic d_ready;
@@ -43,7 +43,7 @@ interface tilelink #(
 		 	    input logic [o - 1 : 0] source,
 		 	    input logic [z - 1 : 0] size,
 		 	    input logic [w - 1 : 0] mask,
-		 	    input logic [8 * w : 0] data);
+		 	    input logic [8 * w - 1: 0] data);
 
 		a_opcode = TL_CHANNEL_A_OPCODE_PUT_PARTIAL_DATA;
 		a_param = 0;
@@ -61,7 +61,7 @@ interface tilelink #(
 		 	 input logic [o - 1 : 0] source,
 		 	 input logic [z - 1 : 0] size,
 		 	 input logic [w - 1 : 0] mask,
-		 	 input logic [8 * w : 0] data);
+		 	 input logic [8 * w - 1 : 0] data);
 
 		a_opcode = TL_CHANNEL_A_OPCODE_PUT_FULL_DATA;
 		a_param = 0;
@@ -95,7 +95,7 @@ interface tilelink #(
 
 	task AccessAckData(input logic [a - 1 : 0] address,
 		       	   input logic [o - 1 : 0] source,
-		       	   input logic [8 * w : 0] data,
+		       	   input logic [8 * w - 1 : 0] data,
 		       	   input logic [z - 1 : 0] size,
 		       	   input logic [w - 1 : 0] mask,
 		       	   input logic error,

@@ -11,6 +11,8 @@ module dpi_mem(
 	input logic clk_i,
 	tinymemif.slave memif
 );
+	assign memif.busy = 'b0;
+
 	always_comb begin
 		priority case (memif.rd_size)
 		MEM_ACCESS_SIZE_BYTE:

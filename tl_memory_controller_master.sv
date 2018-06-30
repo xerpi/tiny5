@@ -20,6 +20,14 @@ module tl_memory_controller_master(
 		logic [tilelink.w - 1 : 0] a_mask;
 	} do_get_info;
 
+	struct packed {
+		logic [tilelink.z - 1 : 0] a_size;
+		logic [tilelink.o - 1 : 0] a_source;
+		logic [tilelink.a - 1 : 0] a_address;
+		logic [tilelink.w - 1 : 0] a_mask;
+		logic [8 * tilelink.w - 1 : 0] a_data;
+	} do_put_full_data_info;
+
 	/* Output logic */
 	always_comb begin
 		case (state)
@@ -42,10 +50,19 @@ module tl_memory_controller_master(
 		DO_PUT_FULL_DATA: begin
 			memif.busy = 1;
 			tilelink.d_ready = 1;
+			tilelink.a_opcode = TL_CHANNEL_A_OPCODE_PUT_FULL_DATA;
+			tilelink.a_param = 0;
+			tilelink.a_size = do_put_full_data_info.a_size;
+			tilelink.a_source = do_put_full_data_info.a_source;
+			tilelink.a_address = do_put_full_data_info.a_address;
+			tilelink.a_mask = do_put_full_data_info.a_mask;
+			tilelink.a_data = do_put_full_data_info.a_data;
+			tilelink.a_valid = 1;
 		end
 		DO_PUT_PARTIAL_DATA: begin
 			memif.busy = 1;
 			tilelink.d_ready = 1;
+			/* TODO */
 		end
 		endcase
 	end
@@ -78,8 +95,7 @@ module tl_memory_controller_master(
 		if (reset_i) begin
 			state <= READY;
 		end else begin
-			case (state)
-			READY: begin
+			if (state == READY) begin
 				if (memif.rd_enable) begin
 					do_get_info.a_source <= 'b0;
 					do_get_info.a_address <= memif.rd_addr;
@@ -94,9 +110,23 @@ module tl_memory_controller_master(
 						do_get_info.a_size <= 2;
 						do_get_info.a_mask <= 'b1111;
 					end
+				end else if (memif.wr_enable) begin
+					do_put_full_data_info.a_source <= 'b0;
+					do_put_full_data_info.a_address <= memif.wr_addr;
+					do_put_full_data_info.a_data <= memif.wr_data;
+
+					if (memif.wr_size == MEM_ACCESS_SIZE_BYTE) begin
+						do_put_full_data_info.a_size <= 0;
+						do_put_full_data_info.a_mask <= 'b0001;
+					end else if (memif.wr_size == MEM_ACCESS_SIZE_HALF) begin
+						do_put_full_data_info.a_size <= 1;
+						do_put_full_data_info.a_mask <= 'b0011;
+					end else if (memif.wr_size == MEM_ACCESS_SIZE_WORD) begin
+						do_put_full_data_info.a_size <= 2;
+						do_put_full_data_info.a_mask <= 'b1111;
+					end
 				end
 			end
-			endcase
 
 			state <= next_state;
 		end

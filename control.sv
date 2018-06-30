@@ -97,6 +97,22 @@ module control(
 
 		if (state == FETCH_ISSUE) begin
 			mem_rd_enable_o = 1;
+		end if (state == DEMW_WAIT) begin
+			if (!halt) begin
+				/* LOAD completed, write to the regfile */
+				if (instr.common.opcode == OPCODE_LOAD) begin
+					priority case (instr.itype.funct3)
+					FUNCT3_LOAD_LB:
+						regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT8;
+					FUNCT3_LOAD_LH:
+						regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT16;
+					FUNCT3_LOAD_LW, FUNCT3_LOAD_LBU, FUNCT3_LOAD_LHU:
+						regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD;
+					endcase
+
+					regfile_we_o = 1;
+				end
+			end
 		end if (state == DEMW_ISSUE) begin
 			priority case (instr.common.opcode)
 			OPCODE_LUI: begin
@@ -150,7 +166,8 @@ module control(
 				endcase
 			end
 			OPCODE_LOAD: begin
-				regfile_we_o = 1;
+				/* For LOADs this is done when we receive the data! */
+				regfile_we_o = 0;
 				mem_rd_enable_o = 1;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
@@ -163,15 +180,6 @@ module control(
 					mem_rd_size_o = MEM_ACCESS_SIZE_HALF;
 				FUNCT3_LOAD_LW:
 					mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
-				endcase
-
-				priority case (instr.itype.funct3)
-				FUNCT3_LOAD_LB:
-					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT8;
-				FUNCT3_LOAD_LH:
-					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD_SEXT16;
-				FUNCT3_LOAD_LW, FUNCT3_LOAD_LBU, FUNCT3_LOAD_LHU:
-					regfile_in_sel_o = REGFILE_IN_SEL_MEM_RD;
 				endcase
 			end
 			OPCODE_STORE: begin

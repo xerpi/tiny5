@@ -13,6 +13,8 @@ module simple_mem #(
 
 	assign phys_rd_addr = memif.rd_addr[$clog2(START_ADDR) - 1:0];
 
+	assign memif.busy = 'b0;
+
 	always_comb begin
 		priority case (memif.rd_size)
 		MEM_ACCESS_SIZE_BYTE:

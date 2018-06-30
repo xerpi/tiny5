@@ -13,6 +13,7 @@ _start:
 	sub x4, x3, x2
 
 	la x5, var
+	lw x6, 0(x5)
 	sw x4, 0(x5)
 	lw x6, 0(x5)
 

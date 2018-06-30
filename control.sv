@@ -26,7 +26,8 @@ module control(
 		RESET,
 		FETCH_ISSUE,
 		FETCH_WAIT,
-		DEMW,
+		DEMW_ISSUE,
+		DEMW_WAIT,
 		ERROR
 	} state, next_state;
 
@@ -51,11 +52,22 @@ module control(
 		end
 		FETCH_WAIT: begin
 			pc_we_o = 0;
-			ir_we_o = 1;
+			if (halt)
+				ir_we_o = 0;
+			else
+				ir_we_o = 1;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
 		end
-		DEMW: begin
-			pc_we_o = 1;
+		DEMW_ISSUE: begin
+			pc_we_o = 0;
+			ir_we_o = 0;
+			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
+		end
+		DEMW_WAIT: begin
+			if (halt)
+				pc_we_o = 0;
+			else
+				pc_we_o = 1;
 			ir_we_o = 0;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
 		end
@@ -85,7 +97,7 @@ module control(
 
 		if (state == FETCH_ISSUE) begin
 			mem_rd_enable_o = 1;
-		end if (state == DEMW) begin
+		end if (state == DEMW_ISSUE) begin
 			priority case (instr.common.opcode)
 			OPCODE_LUI: begin
 				regfile_we_o = 1;
@@ -297,10 +309,19 @@ module control(
 				if (halt) begin
 					next_state = FETCH_WAIT;
 				end else begin
-					next_state = DEMW;
+					next_state = DEMW_ISSUE;
 				end
 			end
-			RESET, DEMW:
+			DEMW_ISSUE:
+				next_state = DEMW_WAIT;
+			DEMW_WAIT: begin
+				if (halt) begin
+					next_state = DEMW_WAIT;
+				end else begin
+					next_state = FETCH_ISSUE;
+				end
+			end
+			RESET:
 				next_state = FETCH_ISSUE;
 			ERROR:
 				next_state = ERROR;

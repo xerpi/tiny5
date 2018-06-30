@@ -5,12 +5,15 @@ interface tilelink #(
 ) (input logic clk_i);
 
 	typedef enum logic [2:0] {
-		TL_MESSAGE_CHANNEL_A_GET = 4,
-		TL_MESSAGE_CHANNEL_A_PUT_FULL = 0,
-		TL_MESSAGE_CHANNEL_A_PUT_PARTIAL = 1,
-		TL_MESSAGE_CHANNEL_D_ACCESS_ACK_DATA = 1,
-		TL_MESSAGE_CHANNEL_D_ACCESS_ACK = 0
-	} tl_message_t;
+		TL_CHANNEL_A_OPCODE_GET = 4,
+		TL_CHANNEL_A_OPCODE_PUT_FULL = 0,
+		TL_CHANNEL_A_OPCODE_PUT_PARTIAL = 1
+	} tl_channel_a_opcode_t;
+
+	typedef enum logic [2:0] {
+		TL_CHANNEL_D_OPCODE_ACCESS_ACK_DATA = 1,
+		TL_CHANNEL_D_OPCODE_ACCESS_ACK = 0
+	} tl_channel_d_opcode_t;
 
 	struct packed {
 		logic [    2 : 0] opcode;
@@ -22,7 +25,7 @@ interface tilelink #(
 		logic [8 * w : 0] data;
 		logic valid;
 		logic ready;
-	} tl_channel_A;
+	} tl_channel_a;
 
 	struct packed {
 		logic [    2 : 0] opcode;
@@ -34,22 +37,22 @@ interface tilelink #(
 		logic error;
 		logic valid;
 		logic ready;
-	} tl_channel_D;
+	} tl_channel_d;
 
 	task Get(input logic [a - 1 : 0] address,
 		 input logic [o - 1 : 0] source,
 		 input logic [z - 1 : 0] size,
 		 input logic [w - 1 : 0] mask);
 
-		channel_A.opcode = TL_MESSAGE_CHANNEL_A_GET;
-		channel_A.param = 0;
-		channel_A.size = size;
-		channel_A.source = source;
-		channel_A.address = address;
-		channel_A.mask = mask;
-		channel_A.valid = 1;
-		channel_A.ready = 1;
-		// channel_A.data = 0; // Data is ignored
+		tl_channel_a.opcode = TL_CHANNEL_A_OPCODE_GET;
+		tl_channel_a.param = 0;
+		tl_channel_a.size = size;
+		tl_channel_a.source = source;
+		tl_channel_a.address = address;
+		tl_channel_a.mask = mask;
+		tl_channel_a.valid = 1;
+		tl_channel_a.ready = 1;
+		// tl_channel_a.data = 0; // Data is ignored
 
 	endtask;
 
@@ -59,15 +62,15 @@ interface tilelink #(
 		 	    input logic [w - 1 : 0] mask,
 		 	    input logic [8 * w : 0] data);
 
-		channel_A.opcode = TL_MESSAGE_CHANNEL_A_PUT_PARTIAL;
-		channel_A.param = 0;
-		channel_A.size = size;
-		channel_A.source = source;
-		channel_A.address = address;
-		channel_A.mask = mask;
-		channel_A.data = data;
-		channel_A.valid = 1;
-		channel_A.ready = 1;
+		tl_channel_a.opcode = TL_CHANNEL_A_OPCODE_PUT_PARTIAL;
+		tl_channel_a.param = 0;
+		tl_channel_a.size = size;
+		tl_channel_a.source = source;
+		tl_channel_a.address = address;
+		tl_channel_a.mask = mask;
+		tl_channel_a.data = data;
+		tl_channel_a.valid = 1;
+		tl_channel_a.ready = 1;
 
 	endtask;
 
@@ -77,15 +80,15 @@ interface tilelink #(
 		 	 input logic [w - 1 : 0] mask,
 		 	 input logic [8 * w : 0] data);
 
-		channel_A.opcode = MESSAGE_CHANNEL_A_PUT_FULL;
-		channel_A.param = 0;
-		channel_A.size = size;
-		channel_A.source = source;
-		channel_A.address = address;
-		channel_A.mask = mask;
-		channel_A.data = data;
-		channel_A.valid = 1;
-		channel_A.ready = 1;
+		tl_channel_a.opcode = TL_CHANNEL_A_OPCODE_PUT_FULL;
+		tl_channel_a.param = 0;
+		tl_channel_a.size = size;
+		tl_channel_a.source = source;
+		tl_channel_a.address = address;
+		tl_channel_a.mask = mask;
+		tl_channel_a.data = data;
+		tl_channel_a.valid = 1;
+		tl_channel_a.ready = 1;
 
 	endtask;
 
@@ -96,14 +99,14 @@ interface tilelink #(
 		       input logic error,
 		       input logic valid);
 
-		channel_D.opcode = MESSAGE_CHANNEL_D_ACCESS_ACK;
-		channel_D.param = 0;
-		channel_D.size = size;
-		channel_D.source = source;
-		// channel_D.sink = ;
-		// channel_D.data = ;
-		channel_D.error = error;
-		channel_D.valid = valid;
+		tl_channel_d.opcode = TL_CHANNEL_D_OPCODE_ACCESS_ACK;
+		tl_channel_d.param = 0;
+		tl_channel_d.size = size;
+		tl_channel_d.source = source;
+		// tl_channel_d.sink = ;
+		// tl_channel_d.data = ;
+		tl_channel_d.error = error;
+		tl_channel_d.valid = valid;
 
 	endtask;
 
@@ -115,27 +118,27 @@ interface tilelink #(
 		       	   input logic error,
 		       	   input logic valid);
 
-		channel_D.opcode = MESSAGE_CHANNEL_D_ACCESS_ACK_DATA;
-		channel_D.param = 0;
-		channel_D.size = size;
-		channel_D.source = source;
-		// channel_D.sink = ;
-		channel_D.data = data;
-		channel_D.error = error;
-		channel_D.valid = valid;
-		channel_D.ready = ready;
+		tl_channel_d.opcode = TL_CHANNEL_D_OPCODE_ACCESS_ACK_DATA;
+		tl_channel_d.param = 0;
+		tl_channel_d.size = size;
+		tl_channel_d.source = source;
+		// tl_channel_d.sink = ;
+		tl_channel_d.data = data;
+		tl_channel_d.error = error;
+		tl_channel_d.valid = valid;
+		//tl_channel_d.ready = ready;
 
 	endtask;
 
 
 	modport master(
-		output channel_A,
-		input channel_D
+		output tl_channel_a,
+		input tl_channel_d
 
 	);
 
 	modport slave(
-		input channel_A,
-		output channel_D
+		input tl_channel_a,
+		output tl_channel_d
 	);
 endinterface

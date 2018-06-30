@@ -61,7 +61,7 @@ module datapath(
 	control control(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
-		.error_i(0),
+		.error_i(1'b0),
 		.ir_i(ir),
 		.pc_we_o(ctrl_pc_we),
 		.ir_we_o(ctrl_ir_we),

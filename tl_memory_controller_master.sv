@@ -28,6 +28,24 @@ module tl_memory_controller_master(
 		logic [8 * tilelink.w - 1 : 0] a_data;
 	} do_put_full_data_info;
 
+	function [tilelink.z - 1 : 0] mem_access_size_to_tl_size(mem_access_size_t size);
+		if (size == MEM_ACCESS_SIZE_BYTE)
+			return 0;
+		else if (size == MEM_ACCESS_SIZE_HALF)
+			return 1;
+		else if (size == MEM_ACCESS_SIZE_WORD)
+			return 2;
+	endfunction
+
+	function [tilelink.w - 1 : 0] mem_access_size_to_tl_mask(mem_access_size_t size);
+		if (size == MEM_ACCESS_SIZE_BYTE)
+			return 'b0001;
+		else if (size == MEM_ACCESS_SIZE_HALF)
+			return 'b0011;
+		else if (size == MEM_ACCESS_SIZE_WORD)
+			return 'b1111;
+	endfunction
+
 	/* Output logic */
 	always_comb begin
 		case (state)
@@ -99,32 +117,14 @@ module tl_memory_controller_master(
 				if (memif.rd_enable) begin
 					do_get_info.a_source <= 'b0;
 					do_get_info.a_address <= memif.rd_addr;
-
-					if (memif.rd_size == MEM_ACCESS_SIZE_BYTE) begin
-						do_get_info.a_size <= 0;
-						do_get_info.a_mask <= 'b0001;
-					end else if (memif.rd_size == MEM_ACCESS_SIZE_HALF) begin
-						do_get_info.a_size <= 1;
-						do_get_info.a_mask <= 'b0011;
-					end else if (memif.rd_size == MEM_ACCESS_SIZE_WORD) begin
-						do_get_info.a_size <= 2;
-						do_get_info.a_mask <= 'b1111;
-					end
+					do_get_info.a_size <= mem_access_size_to_tl_size(memif.rd_size);
+					do_get_info.a_mask <= mem_access_size_to_tl_mask(memif.rd_size);
 				end else if (memif.wr_enable) begin
 					do_put_full_data_info.a_source <= 'b0;
 					do_put_full_data_info.a_address <= memif.wr_addr;
 					do_put_full_data_info.a_data <= memif.wr_data;
-
-					if (memif.wr_size == MEM_ACCESS_SIZE_BYTE) begin
-						do_put_full_data_info.a_size <= 0;
-						do_put_full_data_info.a_mask <= 'b0001;
-					end else if (memif.wr_size == MEM_ACCESS_SIZE_HALF) begin
-						do_put_full_data_info.a_size <= 1;
-						do_put_full_data_info.a_mask <= 'b0011;
-					end else if (memif.wr_size == MEM_ACCESS_SIZE_WORD) begin
-						do_put_full_data_info.a_size <= 2;
-						do_put_full_data_info.a_mask <= 'b1111;
-					end
+					do_put_full_data_info.a_size <= mem_access_size_to_tl_size(memif.wr_size);
+					do_put_full_data_info.a_mask <= mem_access_size_to_tl_mask(memif.wr_size);
 				end
 			end
 

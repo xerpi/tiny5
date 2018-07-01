@@ -28,6 +28,17 @@ module tl_memory_controller_slave(
 		logic [8 * tilelink.w - 1 : 0] a_data;
 	} handle_put_full_data;
 
+	function mem_access_size_t tl_mask_to_mem_access_size(logic [tilelink.w - 1 : 0] mask);
+		case (mask)
+		'b0001:
+			return MEM_ACCESS_SIZE_BYTE;
+		'b0011:
+			return MEM_ACCESS_SIZE_HALF;
+		'b1111:
+			return MEM_ACCESS_SIZE_WORD;
+		endcase
+	endfunction
+
 	/* Output logic */
 	always_comb begin
 		case (state)
@@ -46,14 +57,7 @@ module tl_memory_controller_slave(
 			tilelink.d_valid = 1;
 
 			memif.rd_addr = handle_get_info.a_address;
-			case (handle_get_info.a_mask)
-			'b0001:
-				memif.rd_size = MEM_ACCESS_SIZE_BYTE;
-			'b0011:
-				memif.rd_size = MEM_ACCESS_SIZE_HALF;
-			'b1111:
-				memif.rd_size = MEM_ACCESS_SIZE_WORD;
-			endcase
+			memif.rd_size = tl_mask_to_mem_access_size(handle_get_info.a_mask);
 			memif.wr_enable = 0;
 		end
 		HANDLE_PUT_FULL_DATA: begin
@@ -67,14 +71,7 @@ module tl_memory_controller_slave(
 
 			memif.wr_addr = handle_put_full_data.a_address;
 			memif.wr_data = handle_put_full_data.a_data;
-			case (handle_put_full_data.a_mask)
-			'b0001:
-				memif.wr_size = MEM_ACCESS_SIZE_BYTE;
-			'b0011:
-				memif.wr_size = MEM_ACCESS_SIZE_HALF;
-			'b1111:
-				memif.wr_size = MEM_ACCESS_SIZE_WORD;
-			endcase
+			memif.wr_size = tl_mask_to_mem_access_size(handle_put_full_data.a_mask);
 			memif.wr_enable = 1;
 		end
 		HANDLE_PUT_PARTIAL_DATA: begin

@@ -27,7 +27,7 @@ obj_dir/$(VERILATOR_VTOP): $(VERILATOR_SOURCES) $(VERILATOR_TB_SOURCES)
 verilate: obj_dir/$(VERILATOR_VTOP)
 
 lint:
-	@$(VERILATOR) -Wall --lint-only $(VERILATOR_SOURCES)
+	@$(VERILATOR) -Wall -Wno-fatal --lint-only $(VERILATOR_SOURCES)
 
 run: obj_dir/$(VERILATOR_VTOP) test.bin
 	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)

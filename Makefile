@@ -44,20 +44,41 @@ modelsim: $(MODELSIM_SOURCES) test.hex.txt
 	vsim -do tb/modelsim.do $(MODELSIM_TOP_MODULE)
 
 #### Test code ####
-test.bin: test.elf
-	riscv64-unknown-elf-objcopy -S -O binary $^ $@
-
 test.elf: $(TEST_SOURCES)
 	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
 
 disasm_test: test.elf
 	@riscv64-unknown-elf-objdump -M numeric,no-aliases -D $^
 
+#### Official RISC-V tests ####
+RISCV_TESTS_DIR = ../riscv-tests
+RISCV_TESTS_INC = -I$(RISCV_TESTS_DIR)/isa/macros/scalar -I$(RISCV_TESTS_DIR)/env/p
+include $(RISCV_TESTS_DIR)/isa/rv32ui/Makefrag
+RISCV_TESTS_LST = $(rv32ui_sc_tests)
+
+riscv-tests: $(addsuffix .test.out, $(RISCV_TESTS_LST))
+
+riscv-tests-clean:
+	@rm -rf $(addsuffix .elf, $(RISCV_TESTS_LST)) \
+		$(addsuffix .bin, $(RISCV_TESTS_LST)) \
+		$(addsuffix .test.out, $(RISCV_TESTS_LST)) \
+
+%.test.out: %.bin obj_dir/$(VERILATOR_VTOP)
+	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=$^ > $@
+	@cat $@
+
+%.elf: $(RISCV_TESTS_DIR)/isa/rv32ui/%.S
+	@riscv64-unknown-elf-gcc -I./ $(RISCV_TESTS_INC) -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+
+#### Common rules ####
+%.bin: %.elf
+	@riscv64-unknown-elf-objcopy -S -O binary $^ $@
+
 %.hex.txt: %.bin
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
-clean:
-	rm -rf obj_dir work $(TRACE_FILE) test.elf test.bin test.hex.txt
+clean: riscv-tests-clean
+	@rm -rf obj_dir work $(TRACE_FILE) test.elf test.bin test.hex.txt
 
 .PHONY:
-	verilate run trace gtkwave clean
+	verilate run trace gtkwave riscv-tests clean riscv-tests-clean

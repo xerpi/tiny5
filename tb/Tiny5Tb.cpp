@@ -23,10 +23,11 @@ void Tiny5Tb::resetTick(void)
 	advanceTimeStamp();
 
 	top->clk_i = 0;
-	top->reset_i = 0;
 	top->eval();
 
 	advanceTimeStamp();
+
+	top->reset_i = 0;
 }
 
 void Tiny5Tb::tick(void)

@@ -14,7 +14,7 @@ TEST_SOURCES = test/start.s
 
 VERILATOR_VTOP = V$(VERILATOR_TOP_MODULE)
 CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
-VERILATOR_FLAGS = -Wno-fatal -Wall -CFLAGS "$(CFLAGS)"
+VERILATOR_FLAGS = -Wno-fatal -Wall -CFLAGS "$(CFLAGS)" --x-initial-edge
 TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
 
 all: lint

@@ -137,6 +137,7 @@ typedef enum logic [2:0] {
 } funct3_misc_mem_t;
 
 typedef enum logic [2:0] {
+	FUNCT3_SYSTEM_PRIV   = 3'b000,
 	FUNCT3_SYSTEM_CSRRW  = 3'b001,
 	FUNCT3_SYSTEM_CSRRS  = 3'b010,
 	FUNCT3_SYSTEM_CSRRC  = 3'b011,
@@ -144,6 +145,11 @@ typedef enum logic [2:0] {
 	FUNCT3_SYSTEM_CSRRSI = 3'b110,
 	FUNCT3_SYSTEM_CSRRCI = 3'b111
 } funct3_system_t;
+
+typedef enum logic [11:0] {
+	FUNCT12_SYSTEM_PRIV_ECALL  = 12'b000000000000,
+	FUNCT12_SYSTEM_PRIV_EBREAK = 12'b000000000001
+} funct12_system_priv_t;
 
 typedef enum logic [11:0] {
 	CSR_REG_CYCLE    = 12'hC00,

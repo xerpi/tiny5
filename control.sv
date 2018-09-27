@@ -236,6 +236,19 @@ module control(
 				regfile_in_sel_o = REGFILE_IN_SEL_CSR_OUT;
 
 				priority case (instr.itype.funct3)
+				FUNCT3_SYSTEM_PRIV: begin
+					regfile_we_o = 0;
+					csr_we_o = 0;
+
+					priority case (instr.itype.imm)
+					FUNCT12_SYSTEM_PRIV_ECALL:
+						/* TODO */
+						;
+					FUNCT12_SYSTEM_PRIV_EBREAK:
+						/* TODO */
+						;
+					endcase
+				end
 				FUNCT3_SYSTEM_CSRRW: begin
 					alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
 					alu_op_o = ALU_OP_IN1_PASSTHROUGH;

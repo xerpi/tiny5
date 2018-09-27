@@ -1,6 +1,8 @@
 #ifndef RISCV_TEST_H
 #define RISCV_TEST_H
 
+#define __riscv_xlen 32
+
 #include "../encoding.h"
 
 //-----------------------------------------------------------------------

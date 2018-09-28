@@ -3,7 +3,6 @@ import definitions::*;
 module control(
 	input logic clk_i,
 	input logic reset_i,
-	input logic error_i,
 	input logic [31:0] ir_i,
 	output logic pc_we_o,
 	output logic ir_we_o,
@@ -20,11 +19,9 @@ module control(
 	output compare_unit_op_t compare_unit_op_o,
 	output logic csr_we_o
 );
-	enum logic [1:0] {
-		RESET,
+	enum logic {
 		FETCH,
-		DEMW,
-		ERROR
+		DEMW
 	} state, next_state;
 
 	instruction_t instr;
@@ -33,11 +30,6 @@ module control(
 	/* Current state driven output logic */
 	always_comb begin
 		priority case (state)
-		RESET: begin
-			pc_we_o = 0;
-			ir_we_o = 0;
-			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
-		end
 		FETCH: begin
 			pc_we_o = 0;
 			ir_we_o = 1;
@@ -47,10 +39,6 @@ module control(
 			pc_we_o = 1;
 			ir_we_o = 0;
 			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
-		end
-		ERROR: begin
-			pc_we_o = 0;
-			ir_we_o = 0;
 		end
 		endcase
 	end
@@ -285,24 +273,18 @@ module control(
 
 	/* Next state combinational logic */
 	always_comb begin
-		if (error_i) begin
-			next_state = ERROR;
-		end else begin
-			case (state)
-			FETCH:
-				next_state = DEMW;
-			RESET, DEMW:
-				next_state = FETCH;
-			ERROR:
-				next_state = ERROR;
-			endcase
-		end
+		case (state)
+		FETCH:
+			next_state = DEMW;
+		DEMW:
+			next_state = FETCH;
+		endcase
 	end
 
 	/* Next state sequential logic */
 	always_ff @(posedge clk_i) begin
 		if (reset_i) begin
-			state <= RESET;
+			state <= FETCH;
 		end else begin
 			state <= next_state;
 		end

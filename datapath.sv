@@ -13,8 +13,8 @@ module datapath(
 	instruction_t instr;
 	logic [31:0] next_pc;
 	logic [31:0] next_ir;
-	logic [31:0] alu_din1;
-	logic [31:0] alu_din2;
+	logic [31:0] alu_in1;
+	logic [31:0] alu_in2;
 
 	/* regfile inputs */
 	logic [31:0] rf_rin;
@@ -37,7 +37,7 @@ module datapath(
 	logic ctrl_csr_we;
 
 	/* alu outputs */
-	logic [31:0] alu_dout;
+	logic [31:0] alu_out;
 
 	/* compare unit outputs */
 	logic cmp_unit_res;
@@ -80,9 +80,9 @@ module datapath(
 
 	alu alu(
 		.alu_op_i(ctrl_alu_op),
-		.din1_i(alu_din1),
-		.din2_i(alu_din2),
-		.dout_o(alu_dout)
+		.in1_i(alu_in1),
+		.in2_i(alu_in2),
+		.out_o(alu_out)
 	);
 
 	compare_unit cmp_unit(
@@ -96,30 +96,30 @@ module datapath(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
 		.sel_i(instr.itype.imm),
-		.din_i(alu_dout),
+		.din_i(alu_out),
 		.we_i(ctrl_csr_we),
 		.dout_o(csr_dout)
 	);
 
 	always_comb begin
-		memif.wr_addr = alu_dout;
+		memif.wr_addr = alu_out;
 		memif.wr_data = rf_rout2;
 
 		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
 		NEXT_PC_SEL_ALU_OUT:
-			next_pc = alu_dout;
+			next_pc = alu_out;
 		NEXT_PC_SEL_COMPARE_UNIT_OUT:
 			if (cmp_unit_res == 0)
 				next_pc = pc + 4;
 			else
-				next_pc = alu_dout;
+				next_pc = alu_out;
 		endcase
 
 		priority case (ctrl_regfile_in_sel)
 		REGFILE_IN_SEL_ALU_OUT:
-			rf_rin = alu_dout;
+			rf_rin = alu_out;
 		REGFILE_IN_SEL_PC_4:
 			rf_rin = pc + 4;
 		REGFILE_IN_SEL_MEM_RD:
@@ -136,38 +136,38 @@ module datapath(
 		MEM_RD_ADDR_SEL_PC:
 			memif.rd_addr = pc;
 		MEM_RD_ADDR_SEL_ALU_OUT:
-			memif.rd_addr = alu_dout;
+			memif.rd_addr = alu_out;
 		endcase
 
 		priority case (ctrl_alu_in1_sel)
 		ALU_IN1_SEL_REGFILE_OUT1:
-			alu_din1 = rf_rout1;
+			alu_in1 = rf_rout1;
 		ALU_IN1_SEL_PC:
-			alu_din1 = pc;
+			alu_in1 = pc;
 		ALU_IN1_SEL_IR_CSR_UIMM:
-			alu_din1 = {27'b0, instr.itype.rs1};
+			alu_in1 = {27'b0, instr.itype.rs1};
 		endcase
 
 		priority case (ctrl_alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
-			alu_din2 = rf_rout2;
+			alu_in2 = rf_rout2;
 		ALU_IN2_SEL_IR_UTYPE_IMM:
-			alu_din2 = {instr.utype.imm, 12'b0};
+			alu_in2 = {instr.utype.imm, 12'b0};
 		ALU_IN2_SEL_IR_ITYPE_IMM:
-			alu_din2 = {{20{instr.itype.imm[11]}}, instr.itype.imm};
+			alu_in2 = {{20{instr.itype.imm[11]}}, instr.itype.imm};
 		ALU_IN2_SEL_IR_JTYPE_IMM:
-			alu_din2 = {{11{instr.jtype.imm20}}, instr.jtype.imm20,
+			alu_in2 = {{11{instr.jtype.imm20}}, instr.jtype.imm20,
 				instr.jtype.imm12, instr.jtype.imm11,
 				instr.jtype.imm1, 1'b0};
 		ALU_IN2_SEL_IR_BTYPE_IMM:
-			alu_din2 = {{19{instr.btype.imm12}}, instr.btype.imm12,
+			alu_in2 = {{19{instr.btype.imm12}}, instr.btype.imm12,
 				instr.btype.imm11, instr.btype.imm5,
 				instr.btype.imm1, 1'b0};
 		ALU_IN2_SEL_IR_STYPE_IMM:
-			alu_din2 = {{20{instr.stype.imm5[6]}}, instr.stype.imm5,
+			alu_in2 = {{20{instr.stype.imm5[6]}}, instr.stype.imm5,
 				instr.stype.imm0};
 		ALU_IN2_SEL_CSR_OUT:
-			alu_din2 = csr_dout;
+			alu_in2 = csr_dout;
 		endcase
 
 		next_ir = memif.rd_data;

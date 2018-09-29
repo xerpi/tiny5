@@ -3,10 +3,11 @@ import definitions::*;
 module csr(
 	input logic clk_i,
 	input logic reset_i,
-	input logic [11:0] sel_i,
-	input logic [31:0] din_i,
+	input logic [11:0] rs_i,
+	input logic [11:0] rd_i,
+	input logic [31:0] in_i,
 	input logic we_i,
-	output logic [31:0] dout_o
+	output logic [31:0] out_o
 );
 	logic [63:0] reg_cycle;
 	logic [63:0] reg_time;
@@ -17,21 +18,21 @@ module csr(
 	assign next_cycle = reg_cycle + 1;
 
 	always_comb begin
-		case (sel_i)
+		case (rs_i)
 		CSR_REG_CYCLE:
-			dout_o = reg_cycle[31:0];
+			out_o = reg_cycle[31:0];
 		CSR_REG_TIME:
-			dout_o = reg_time[31:0];
+			out_o = reg_time[31:0];
 		CSR_REG_INSTRET:
-			dout_o = reg_instret[31:0];
+			out_o = reg_instret[31:0];
 		CSR_REG_CYCLEH:
-			dout_o = reg_cycle[63:32];
+			out_o = reg_cycle[63:32];
 		CSR_REG_TIMEH:
-			dout_o = reg_time[63:32];
+			out_o = reg_time[63:32];
 		CSR_REG_INSTRETH:
-			dout_o = reg_instret[63:32];
+			out_o = reg_instret[63:32];
 		default:
-			dout_o = 32'b0;
+			out_o = 32'b0;
 		endcase
 	end
 
@@ -44,10 +45,10 @@ module csr(
 			reg_cycle <= next_cycle;
 
 			if (we_i) begin
-				/*priority case (sel_i)
+				/*priority case (rd_i)
 				TODO: Implement writable registers
 				CSR_REG_FOO:
-					reg_foo[31:0] <= din_i;
+					reg_foo[31:0] <= in_i;
 				endcase*/
 			end
 		end

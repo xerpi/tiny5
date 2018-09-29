@@ -162,6 +162,8 @@ typedef enum logic [11:0] {
 
 /* tiny5 definitions */
 
+/* Multiplexer select */
+
 typedef enum logic [1:0] {
 	NEXT_PC_SEL_PC_4,
 	NEXT_PC_SEL_ALU_OUT,
@@ -218,5 +220,69 @@ typedef enum logic [1:0] {
 	MEM_ACCESS_SIZE_HALF,
 	MEM_ACCESS_SIZE_WORD
 } mem_access_size_t;
+
+/* Pipeline stage registers (IF - ID - EX - MEM - WB) */
+
+typedef struct packed {
+	logic [31:0] pc;
+	instruction_t instr;
+} pipeline_if_id_reg_t;
+
+typedef struct packed {
+	logic [31:0] pc;
+	instruction_t instr;
+	logic [31:0] imm;
+	logic [31:0] regfile_out1;
+	logic [31:0] regfile_out2;
+	logic [31:0] csr_out;
+} pipeline_id_ex_reg_t;
+
+typedef struct packed {
+	logic [31:0] pc;
+	instruction_t instr;
+	logic [31:0] regfile_out2;
+	logic [31:0] csr_out;
+	logic [31:0] alu_out;
+	logic cmp_unit_res;
+} pipeline_ex_mem_reg_t;
+
+typedef struct packed {
+	logic [31:0] pc;
+	instruction_t instr;
+	logic [31:0] csr_out;
+	logic [31:0] alu_out;
+	logic cmp_unit_res;
+	logic [31:0] dmem_rd_data;
+} pipeline_mem_wb_reg_t;
+
+/* Pipeline per-stage control signals */
+
+typedef struct packed {
+	logic pc_we;
+	next_pc_sel_t next_pc_sel;
+} pipeline_if_ctrl_t;
+
+typedef struct packed {
+	logic unused; /* TODO, needed? */
+} pipeline_id_ctrl_t;
+
+typedef struct packed {
+	alu_op_t alu_op;
+	alu_in1_sel_t alu_in1_sel;
+	alu_in2_sel_t alu_in2_sel;
+	compare_unit_op_t compare_unit_op;
+} pipeline_ex_ctrl_t;
+
+typedef struct packed {
+	mem_access_size_t dmem_rd_size;
+	mem_access_size_t dmem_wr_size;
+	logic dmem_wr_enable;
+} pipeline_mem_ctrl_t;
+
+typedef struct packed {
+	logic regfile_we;
+	logic csr_we;
+	regfile_in_sel_t regfile_in_sel;
+} pipeline_wb_ctrl_t;
 
 endpackage

@@ -6,177 +6,187 @@ module datapath(
 	mem_if.slave imemif,
 	mem_if.slave dmemif
 );
-	/* registers */
+	/* Pipeline registers */
 	logic [31:0] pc;
-	logic [31:0] ir;
+	pipeline_if_id_reg_t if_id_reg;
+	pipeline_id_ex_reg_t id_ex_reg;
+	pipeline_ex_mem_reg_t ex_mem_reg;
+	pipeline_mem_wb_reg_t mem_wb_reg;
 
-	/* nets */
-	instruction_t instr;
+	/* Pipeline registers next state */
 	logic [31:0] next_pc;
-	logic [31:0] next_ir;
+	pipeline_if_id_reg_t next_if_id_reg;
+	pipeline_id_ex_reg_t next_id_ex_reg;
+	pipeline_ex_mem_reg_t next_ex_mem_reg;
+	pipeline_mem_wb_reg_t next_mem_wb_reg;
+
+	/* Pipeline per-stage control signals (control output) */
+	pipeline_if_ctrl_t control_if_ctrl;
+	pipeline_id_ctrl_t control_id_ctrl;
+	pipeline_ex_ctrl_t control_ex_ctrl;
+	pipeline_mem_ctrl_t control_mem_ctrl;
+	pipeline_wb_ctrl_t control_wb_ctrl;
+
+	logic [31:0] regfile_rin;
 	logic [31:0] alu_in1;
 	logic [31:0] alu_in2;
 
-	/* regfile inputs */
-	logic [31:0] rf_rin;
+	control control(
+		.if_id_reg_i(if_id_reg),
+		.id_ex_reg_i(id_ex_reg),
+		.ex_mem_reg_i(ex_mem_reg),
+		.mem_wb_reg_i(mem_wb_reg),
+		.if_ctrl_o(control_if_ctrl),
+		.id_ctrl_o(control_id_ctrl),
+		.ex_ctrl_o(control_ex_ctrl),
+		.mem_ctrl_o(control_mem_ctrl),
+		.wb_ctrl_o(control_wb_ctrl)
+	);
 
-	/* regfile outputs */
-	logic [31:0] rf_rout1;
-	logic [31:0] rf_rout2;
+	/* IF stage */
+	assign imemif.rd_addr = pc;
+	assign imemif.rd_size = MEM_ACCESS_SIZE_WORD;
+	assign imemif.wr_enable = 0;
 
-	/* immediate outputs */
-	logic [31:0] immediate_imm;
+	assign next_if_id_reg.pc = pc;
+	assign next_if_id_reg.instr = imemif.rd_data;
 
-	/* control outputs */
-	logic ctrl_pc_we;
-	logic ctrl_ir_we;
-	logic ctrl_regfile_we;
-	next_pc_sel_t ctrl_next_pc_sel;
-	regfile_in_sel_t ctrl_regfile_in_sel;
-	alu_op_t ctrl_alu_op;
-	alu_in1_sel_t ctrl_alu_in1_sel;
-	alu_in2_sel_t ctrl_alu_in2_sel;
-	compare_unit_op_t ctrl_compare_unit_op;
-	logic ctrl_csr_we;
+	always_comb begin
+		priority case (control_if_ctrl.next_pc_sel)
+		NEXT_PC_SEL_PC_4:
+			next_pc = pc + 4;
+		NEXT_PC_SEL_ALU_OUT:
+			next_pc = mem_wb_reg.alu_out;
+		NEXT_PC_SEL_COMPARE_UNIT_OUT:
+			if (mem_wb_reg.cmp_unit_res == 0)
+				next_pc = pc + 4;
+			else
+				next_pc = mem_wb_reg.alu_out;
+		endcase
+	end
 
-	/* alu outputs */
-	logic [31:0] alu_out;
+	always_ff @(posedge clk_i) begin
+		/* TODO: Improve this */
+		if (reset_i)
+			pc <= 'h00010000;
+		else if (control_if_ctrl.pc_we)
+			pc <= next_pc;
 
-	/* compare unit outputs */
-	logic cmp_unit_res;
+		if_id_reg <= next_if_id_reg;
+	end
 
-	/* CSR outputs */
-	logic [31:0] csr_dout;
-
-	assign instr = ir;
+	/* ID stage */
+	assign next_id_ex_reg.pc = if_id_reg.pc;
+	assign next_id_ex_reg.instr = if_id_reg.instr;
 
 	regfile regfile(
 		.clk_i(clk_i),
-		.rs1_i(instr.common.rs1),
-		.rs2_i(instr.common.rs2),
-		.rd_i(instr.common.rd),
-		.rin_i(rf_rin),
-		.we_i(ctrl_regfile_we),
-		.rout1_o(rf_rout1),
-		.rout2_o(rf_rout2)
-	);
-
-	immediate immediate(
-		.instr_i(ir),
-		.imm_o(immediate_imm)
-	);
-
-	control control(
-		.clk_i(clk_i),
-		.reset_i(reset_i),
-		.ir_i(ir),
-		.pc_we_o(ctrl_pc_we),
-		.ir_we_o(ctrl_ir_we),
-		.regfile_we_o(ctrl_regfile_we),
-		.next_pc_sel_o(ctrl_next_pc_sel),
-		.regfile_in_sel_o(ctrl_regfile_in_sel),
-		.dmem_rd_size_o(dmemif.rd_size),
-		.dmem_wr_size_o(dmemif.wr_size),
-		.dmem_wr_enable_o(dmemif.wr_enable),
-		.alu_op_o(ctrl_alu_op),
-		.alu_in1_sel_o(ctrl_alu_in1_sel),
-		.alu_in2_sel_o(ctrl_alu_in2_sel),
-		.compare_unit_op_o(ctrl_compare_unit_op),
-		.csr_we_o(ctrl_csr_we)
-	);
-
-	alu alu(
-		.alu_op_i(ctrl_alu_op),
-		.in1_i(alu_in1),
-		.in2_i(alu_in2),
-		.out_o(alu_out)
-	);
-
-	compare_unit cmp_unit(
-		.compare_unit_op_i(ctrl_compare_unit_op),
-		.in1_i(rf_rout1),
-		.in2_i(rf_rout2),
-		.res_o(cmp_unit_res)
+		.rs1_i(if_id_reg.instr.common.rs1),
+		.rs2_i(if_id_reg.instr.common.rs2),
+		.rd_i(mem_wb_reg.instr.common.rd),
+		.rin_i(regfile_rin),
+		.we_i(control_wb_ctrl.regfile_we),
+		.rout1_o(next_id_ex_reg.regfile_out1),
+		.rout2_o(next_id_ex_reg.regfile_out2)
 	);
 
 	csr csr(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
-		.sel_i(instr.itype.imm),
-		.din_i(alu_out),
-		.we_i(ctrl_csr_we),
-		.dout_o(csr_dout)
+		.rs_i(if_id_reg.instr.itype.imm),
+		.rd_i(mem_wb_reg.instr.itype.imm),
+		.in_i(mem_wb_reg.alu_out),
+		.we_i(control_wb_ctrl.csr_we),
+		.out_o(next_id_ex_reg.csr_out)
 	);
 
-	assign imemif.rd_addr = pc;
-	assign next_ir = imemif.rd_data;
-	assign imemif.rd_size = MEM_ACCESS_SIZE_WORD;
-	assign imemif.wr_enable = 0;
+	immediate immediate(
+		.instr_i(if_id_reg.instr),
+		.imm_o(next_id_ex_reg.imm)
+	);
 
-	assign dmemif.rd_addr = alu_out;
-	assign dmemif.wr_addr = alu_out;
-	assign dmemif.wr_data = rf_rout2;
+	always_ff @(posedge clk_i) begin
+		id_ex_reg <= next_id_ex_reg;
+	end
+
+	/* EX stage */
+	assign next_ex_mem_reg.pc = id_ex_reg.pc;
+	assign next_ex_mem_reg.instr = id_ex_reg.instr;
+	assign next_ex_mem_reg.regfile_out2 = id_ex_reg.regfile_out2;
+	assign next_ex_mem_reg.csr_out = id_ex_reg.csr_out;
 
 	always_comb begin
-		priority case (ctrl_next_pc_sel)
-		NEXT_PC_SEL_PC_4:
-			next_pc = pc + 4;
-		NEXT_PC_SEL_ALU_OUT:
-			next_pc = alu_out;
-		NEXT_PC_SEL_COMPARE_UNIT_OUT:
-			if (cmp_unit_res == 0)
-				next_pc = pc + 4;
-			else
-				next_pc = alu_out;
-		endcase
-
-		priority case (ctrl_regfile_in_sel)
-		REGFILE_IN_SEL_ALU_OUT:
-			rf_rin = alu_out;
-		REGFILE_IN_SEL_PC_4:
-			rf_rin = pc + 4;
-		REGFILE_IN_SEL_MEM_RD:
-			rf_rin = dmemif.rd_data;
-		REGFILE_IN_SEL_MEM_RD_SEXT8:
-			rf_rin = {{24{dmemif.rd_data[7]}}, dmemif.rd_data[7:0]};
-		REGFILE_IN_SEL_MEM_RD_SEXT16:
-			rf_rin = {{16{dmemif.rd_data[15]}}, dmemif.rd_data[15:0]};
-		REGFILE_IN_SEL_CSR_OUT:
-			rf_rin = csr_dout;
-		endcase
-
-		priority case (ctrl_alu_in1_sel)
+		priority case (control_ex_ctrl.alu_in1_sel)
 		ALU_IN1_SEL_REGFILE_OUT1:
-			alu_in1 = rf_rout1;
+			alu_in1 = id_ex_reg.regfile_out1;
 		ALU_IN1_SEL_PC:
-			alu_in1 = pc;
+			alu_in1 = id_ex_reg.pc;
 		ALU_IN1_SEL_CSR_OUT:
-			alu_in1 = csr_dout;
+			alu_in1 = id_ex_reg.csr_out;
 		endcase
 
-		priority case (ctrl_alu_in2_sel)
+		priority case (control_ex_ctrl.alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
-			alu_in2 = rf_rout2;
+			alu_in2 = id_ex_reg.regfile_out2;
 		ALU_IN2_SEL_IMM:
-			alu_in2 = immediate_imm;
+			alu_in2 = id_ex_reg.imm;
 		ALU_IN2_SEL_CSR_OUT:
-			alu_in2 = csr_dout;
+			alu_in2 = id_ex_reg.csr_out;
 		endcase
 	end
 
-	/* Next PC/IR logic */
-	always_ff @(posedge clk_i) begin
-		if (reset_i) begin
-			pc <= 'h00010000;
-			ir <= 0;
-		end else begin
-			if (ctrl_pc_we) begin
-				pc <= next_pc;
-			end
+	alu alu(
+		.alu_op_i(control_ex_ctrl.alu_op),
+		.in1_i(alu_in1),
+		.in2_i(alu_in2),
+		.out_o(next_ex_mem_reg.alu_out)
+	);
 
-			if (ctrl_ir_we) begin
-				ir <= next_ir;
-			end
-		end
+	compare_unit cmp_unit(
+		.compare_unit_op_i(control_ex_ctrl.compare_unit_op),
+		.in1_i(id_ex_reg.regfile_out1),
+		.in2_i(id_ex_reg.regfile_out2),
+		.res_o(next_ex_mem_reg.cmp_unit_res)
+	);
+
+	always_ff @(posedge clk_i) begin
+		ex_mem_reg <= next_ex_mem_reg;
+	end
+
+	/* MEM stage */
+	assign dmemif.rd_addr = ex_mem_reg.alu_out;
+	assign dmemif.rd_size = control_mem_ctrl.dmem_rd_size;
+	assign dmemif.wr_addr = ex_mem_reg.alu_out;
+	assign dmemif.wr_data = ex_mem_reg.regfile_out2;
+	assign dmemif.wr_size = control_mem_ctrl.dmem_wr_size;
+	assign dmemif.wr_enable = control_mem_ctrl.dmem_wr_enable;
+
+	assign next_mem_wb_reg.pc = ex_mem_reg.pc;
+	assign next_mem_wb_reg.instr = ex_mem_reg.instr;
+	assign next_mem_wb_reg.csr_out = ex_mem_reg.csr_out;
+	assign next_mem_wb_reg.alu_out = ex_mem_reg.alu_out;
+	assign next_mem_wb_reg.cmp_unit_res = ex_mem_reg.cmp_unit_res;
+	assign next_mem_wb_reg.dmem_rd_data = dmemif.rd_data;
+
+	always_ff @(posedge clk_i) begin
+		mem_wb_reg <= next_mem_wb_reg;
+	end
+
+	/* WB stage */
+	always_comb begin
+		priority case (control_wb_ctrl.regfile_in_sel)
+		REGFILE_IN_SEL_ALU_OUT:
+			regfile_rin = mem_wb_reg.alu_out;
+		REGFILE_IN_SEL_PC_4:
+			regfile_rin = mem_wb_reg.pc + 4;
+		REGFILE_IN_SEL_MEM_RD:
+			regfile_rin = dmemif.rd_data;
+		REGFILE_IN_SEL_MEM_RD_SEXT8:
+			regfile_rin = {{24{dmemif.rd_data[7]}}, dmemif.rd_data[7:0]};
+		REGFILE_IN_SEL_MEM_RD_SEXT16:
+			regfile_rin = {{16{dmemif.rd_data[15]}}, dmemif.rd_data[15:0]};
+		REGFILE_IN_SEL_CSR_OUT:
+			regfile_rin = mem_wb_reg.csr_out;
+		endcase
 	end
 endmodule

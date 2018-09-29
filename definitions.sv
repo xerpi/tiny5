@@ -185,16 +185,12 @@ typedef enum logic {
 typedef enum logic [1:0] {
 	ALU_IN1_SEL_REGFILE_OUT1,
 	ALU_IN1_SEL_PC,
-	ALU_IN1_SEL_IR_CSR_UIMM
+	ALU_IN1_SEL_IMM
 } alu_in1_sel_t;
 
-typedef enum logic [2:0] {
+typedef enum logic [1:0] {
 	ALU_IN2_SEL_REGFILE_OUT2,
-	ALU_IN2_SEL_IR_UTYPE_IMM,
-	ALU_IN2_SEL_IR_ITYPE_IMM,
-	ALU_IN2_SEL_IR_JTYPE_IMM,
-	ALU_IN2_SEL_IR_BTYPE_IMM,
-	ALU_IN2_SEL_IR_STYPE_IMM,
+	ALU_IN2_SEL_IMM,
 	ALU_IN2_SEL_CSR_OUT
 } alu_in2_sel_t;
 

@@ -23,6 +23,9 @@ module datapath(
 	logic [31:0] rf_rout1;
 	logic [31:0] rf_rout2;
 
+	/* immediate outputs */
+	logic [31:0] immediate_imm;
+
 	/* control outputs */
 	logic ctrl_pc_we;
 	logic ctrl_ir_we;
@@ -56,6 +59,11 @@ module datapath(
 		.we_i(ctrl_regfile_we),
 		.rout1_o(rf_rout1),
 		.rout2_o(rf_rout2)
+	);
+
+	immediate immediate(
+		.instr_i(ir),
+		.imm_o(immediate_imm)
 	);
 
 	control control(
@@ -144,28 +152,15 @@ module datapath(
 			alu_in1 = rf_rout1;
 		ALU_IN1_SEL_PC:
 			alu_in1 = pc;
-		ALU_IN1_SEL_IR_CSR_UIMM:
-			alu_in1 = {27'b0, instr.itype.rs1};
+		ALU_IN1_SEL_IMM:
+			alu_in1 = immediate_imm;
 		endcase
 
 		priority case (ctrl_alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
 			alu_in2 = rf_rout2;
-		ALU_IN2_SEL_IR_UTYPE_IMM:
-			alu_in2 = {instr.utype.imm, 12'b0};
-		ALU_IN2_SEL_IR_ITYPE_IMM:
-			alu_in2 = {{20{instr.itype.imm[11]}}, instr.itype.imm};
-		ALU_IN2_SEL_IR_JTYPE_IMM:
-			alu_in2 = {{11{instr.jtype.imm20}}, instr.jtype.imm20,
-				instr.jtype.imm12, instr.jtype.imm11,
-				instr.jtype.imm1, 1'b0};
-		ALU_IN2_SEL_IR_BTYPE_IMM:
-			alu_in2 = {{19{instr.btype.imm12}}, instr.btype.imm12,
-				instr.btype.imm11, instr.btype.imm5,
-				instr.btype.imm1, 1'b0};
-		ALU_IN2_SEL_IR_STYPE_IMM:
-			alu_in2 = {{20{instr.stype.imm5[6]}}, instr.stype.imm5,
-				instr.stype.imm0};
+		ALU_IN2_SEL_IMM:
+			alu_in2 = immediate_imm;
 		ALU_IN2_SEL_CSR_OUT:
 			alu_in2 = csr_dout;
 		endcase

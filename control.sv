@@ -65,14 +65,14 @@ module control(
 				regfile_we_o = 1;
 				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
 				alu_op_o = ALU_OP_IN2_PASSTHROUGH;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 			end
 			OPCODE_AUIPC: begin
 				regfile_we_o = 1;
 				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_PC;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_UTYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 			end
 			OPCODE_JAL: begin
 				next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
@@ -80,7 +80,7 @@ module control(
 				regfile_in_sel_o = REGFILE_IN_SEL_PC_4;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_PC;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_JTYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 			end
 			OPCODE_JALR: begin
 				next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
@@ -88,13 +88,13 @@ module control(
 				regfile_in_sel_o = REGFILE_IN_SEL_PC_4;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 			end
 			OPCODE_BRANCH: begin
 				next_pc_sel_o = NEXT_PC_SEL_COMPARE_UNIT_OUT;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_PC;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_BTYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 
 				priority case (instr.btype.funct3)
 				FUNCT3_BRANCH_BEQ:
@@ -115,7 +115,7 @@ module control(
 				regfile_we_o = 1;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 
 				priority case (instr.itype.funct3)
 				FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
@@ -139,7 +139,7 @@ module control(
 				mem_wr_enable_o = 1;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_STYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 
 				priority case (instr.itype.funct3)
 				FUNCT3_STORE_SB:
@@ -154,7 +154,7 @@ module control(
 				regfile_we_o = 1;
 				regfile_in_sel_o = REGFILE_IN_SEL_ALU_OUT;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
-				alu_in2_sel_o = ALU_IN2_SEL_IR_ITYPE_IMM;
+				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 
 				priority case (instr.itype.funct3)
 				FUNCT3_OP_IMM_ADDI:
@@ -252,16 +252,16 @@ module control(
 					alu_op_o = ALU_OP_XOR;
 				end
 				FUNCT3_SYSTEM_CSRRWI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_in1_sel_o = ALU_IN1_SEL_IMM;
 					alu_op_o = ALU_OP_IN1_PASSTHROUGH;
 				end
 				FUNCT3_SYSTEM_CSRRSI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_in1_sel_o = ALU_IN1_SEL_IMM;
 					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
 					alu_op_o = ALU_OP_OR;
 				end
 				FUNCT3_SYSTEM_CSRRCI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IR_CSR_UIMM;
+					alu_in1_sel_o = ALU_IN1_SEL_IMM;
 					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
 					alu_op_o = ALU_OP_XOR;
 				end

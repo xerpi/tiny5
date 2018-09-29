@@ -177,11 +177,6 @@ typedef enum logic [2:0] {
 	REGFILE_IN_SEL_CSR_OUT
 } regfile_in_sel_t;
 
-typedef enum logic {
-	MEM_RD_ADDR_SEL_PC,
-	MEM_RD_ADDR_SEL_ALU_OUT
-} mem_rd_addr_sel_t;
-
 typedef enum logic [1:0] {
 	ALU_IN1_SEL_REGFILE_OUT1,
 	ALU_IN1_SEL_PC,

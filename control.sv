@@ -9,10 +9,9 @@ module control(
 	output logic regfile_we_o,
 	output next_pc_sel_t next_pc_sel_o,
 	output regfile_in_sel_t regfile_in_sel_o,
-	output mem_rd_addr_sel_t mem_rd_addr_sel_o,
-	output mem_access_size_t mem_rd_size_o,
-	output mem_access_size_t mem_wr_size_o,
-	output logic mem_wr_enable_o,
+	output mem_access_size_t dmem_rd_size_o,
+	output mem_access_size_t dmem_wr_size_o,
+	output logic dmem_wr_enable_o,
 	output alu_op_t alu_op_o,
 	output alu_in1_sel_t alu_in1_sel_o,
 	output alu_in2_sel_t alu_in2_sel_o,
@@ -33,12 +32,10 @@ module control(
 		FETCH: begin
 			pc_we_o = 0;
 			ir_we_o = 1;
-			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_PC;
 		end
 		DEMW: begin
 			pc_we_o = 1;
 			ir_we_o = 0;
-			mem_rd_addr_sel_o = MEM_RD_ADDR_SEL_ALU_OUT;
 		end
 		endcase
 	end
@@ -48,9 +45,9 @@ module control(
 		/* Strict defaults */
 		regfile_we_o = 0;
 		next_pc_sel_o = NEXT_PC_SEL_PC_4;
-		mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
-		mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
-		mem_wr_enable_o = 0;
+		dmem_rd_size_o = MEM_ACCESS_SIZE_WORD;
+		dmem_wr_size_o = MEM_ACCESS_SIZE_WORD;
+		dmem_wr_enable_o = 0;
 		csr_we_o = 0;
 
 		/* Don't care defaults */
@@ -119,11 +116,11 @@ module control(
 
 				priority case (instr.itype.funct3)
 				FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
-					mem_rd_size_o = MEM_ACCESS_SIZE_BYTE;
+					dmem_rd_size_o = MEM_ACCESS_SIZE_BYTE;
 				FUNCT3_LOAD_LH, FUNCT3_LOAD_LHU:
-					mem_rd_size_o = MEM_ACCESS_SIZE_HALF;
+					dmem_rd_size_o = MEM_ACCESS_SIZE_HALF;
 				FUNCT3_LOAD_LW:
-					mem_rd_size_o = MEM_ACCESS_SIZE_WORD;
+					dmem_rd_size_o = MEM_ACCESS_SIZE_WORD;
 				endcase
 
 				priority case (instr.itype.funct3)
@@ -136,18 +133,18 @@ module control(
 				endcase
 			end
 			OPCODE_STORE: begin
-				mem_wr_enable_o = 1;
+				dmem_wr_enable_o = 1;
 				alu_op_o = ALU_OP_ADD;
 				alu_in1_sel_o = ALU_IN1_SEL_REGFILE_OUT1;
 				alu_in2_sel_o = ALU_IN2_SEL_IMM;
 
 				priority case (instr.itype.funct3)
 				FUNCT3_STORE_SB:
-					mem_wr_size_o = MEM_ACCESS_SIZE_BYTE;
+					dmem_wr_size_o = MEM_ACCESS_SIZE_BYTE;
 				FUNCT3_STORE_SH:
-					mem_wr_size_o = MEM_ACCESS_SIZE_HALF;
+					dmem_wr_size_o = MEM_ACCESS_SIZE_HALF;
 				FUNCT3_STORE_SW:
-					mem_wr_size_o = MEM_ACCESS_SIZE_WORD;
+					dmem_wr_size_o = MEM_ACCESS_SIZE_WORD;
 				endcase
 			end
 			OPCODE_OP_IMM: begin

@@ -3,7 +3,8 @@ import definitions::*;
 module datapath(
 	input logic clk_i,
 	input logic reset_i,
-	mem_if.slave memif
+	mem_if.slave imemif,
+	mem_if.slave dmemif
 );
 	/* registers */
 	logic [31:0] pc;
@@ -32,7 +33,6 @@ module datapath(
 	logic ctrl_regfile_we;
 	next_pc_sel_t ctrl_next_pc_sel;
 	regfile_in_sel_t ctrl_regfile_in_sel;
-	mem_rd_addr_sel_t ctrl_mem_rd_addr_sel;
 	alu_op_t ctrl_alu_op;
 	alu_in1_sel_t ctrl_alu_in1_sel;
 	alu_in2_sel_t ctrl_alu_in2_sel;
@@ -75,10 +75,9 @@ module datapath(
 		.regfile_we_o(ctrl_regfile_we),
 		.next_pc_sel_o(ctrl_next_pc_sel),
 		.regfile_in_sel_o(ctrl_regfile_in_sel),
-		.mem_rd_addr_sel_o(ctrl_mem_rd_addr_sel),
-		.mem_rd_size_o(memif.rd_size),
-		.mem_wr_size_o(memif.wr_size),
-		.mem_wr_enable_o(memif.wr_enable),
+		.dmem_rd_size_o(dmemif.rd_size),
+		.dmem_wr_size_o(dmemif.wr_size),
+		.dmem_wr_enable_o(dmemif.wr_enable),
 		.alu_op_o(ctrl_alu_op),
 		.alu_in1_sel_o(ctrl_alu_in1_sel),
 		.alu_in2_sel_o(ctrl_alu_in2_sel),
@@ -109,10 +108,16 @@ module datapath(
 		.dout_o(csr_dout)
 	);
 
-	always_comb begin
-		memif.wr_addr = alu_out;
-		memif.wr_data = rf_rout2;
+	assign imemif.rd_addr = pc;
+	assign next_ir = imemif.rd_data;
+	assign imemif.rd_size = MEM_ACCESS_SIZE_WORD;
+	assign imemif.wr_enable = 0;
 
+	assign dmemif.rd_addr = alu_out;
+	assign dmemif.wr_addr = alu_out;
+	assign dmemif.wr_data = rf_rout2;
+
+	always_comb begin
 		priority case (ctrl_next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
@@ -131,20 +136,13 @@ module datapath(
 		REGFILE_IN_SEL_PC_4:
 			rf_rin = pc + 4;
 		REGFILE_IN_SEL_MEM_RD:
-			rf_rin = memif.rd_data;
+			rf_rin = dmemif.rd_data;
 		REGFILE_IN_SEL_MEM_RD_SEXT8:
-			rf_rin = {{24{memif.rd_data[7]}}, memif.rd_data[7:0]};
+			rf_rin = {{24{dmemif.rd_data[7]}}, dmemif.rd_data[7:0]};
 		REGFILE_IN_SEL_MEM_RD_SEXT16:
-			rf_rin = {{16{memif.rd_data[15]}}, memif.rd_data[15:0]};
+			rf_rin = {{16{dmemif.rd_data[15]}}, dmemif.rd_data[15:0]};
 		REGFILE_IN_SEL_CSR_OUT:
 			rf_rin = csr_dout;
-		endcase
-
-		priority case (ctrl_mem_rd_addr_sel)
-		MEM_RD_ADDR_SEL_PC:
-			memif.rd_addr = pc;
-		MEM_RD_ADDR_SEL_ALU_OUT:
-			memif.rd_addr = alu_out;
 		endcase
 
 		priority case (ctrl_alu_in1_sel)
@@ -164,8 +162,6 @@ module datapath(
 		ALU_IN2_SEL_CSR_OUT:
 			alu_in2 = csr_dout;
 		endcase
-
-		next_ir = memif.rd_data;
 	end
 
 	/* Next PC/IR logic */

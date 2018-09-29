@@ -152,8 +152,8 @@ module datapath(
 			alu_in1 = rf_rout1;
 		ALU_IN1_SEL_PC:
 			alu_in1 = pc;
-		ALU_IN1_SEL_IMM:
-			alu_in1 = immediate_imm;
+		ALU_IN1_SEL_CSR_OUT:
+			alu_in1 = csr_dout;
 		endcase
 
 		priority case (ctrl_alu_in2_sel)

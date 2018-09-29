@@ -252,17 +252,17 @@ module control(
 					alu_op_o = ALU_OP_XOR;
 				end
 				FUNCT3_SYSTEM_CSRRWI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IMM;
-					alu_op_o = ALU_OP_IN1_PASSTHROUGH;
+					alu_in2_sel_o = ALU_IN2_SEL_IMM;
+					alu_op_o = ALU_OP_IN2_PASSTHROUGH;
 				end
 				FUNCT3_SYSTEM_CSRRSI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IMM;
-					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_in1_sel_o = ALU_IN1_SEL_CSR_OUT;
+					alu_in2_sel_o = ALU_IN2_SEL_IMM;
 					alu_op_o = ALU_OP_OR;
 				end
 				FUNCT3_SYSTEM_CSRRCI: begin
-					alu_in1_sel_o = ALU_IN1_SEL_IMM;
-					alu_in2_sel_o = ALU_IN2_SEL_CSR_OUT;
+					alu_in1_sel_o = ALU_IN1_SEL_CSR_OUT;
+					alu_in2_sel_o = ALU_IN2_SEL_IMM;
 					alu_op_o = ALU_OP_XOR;
 				end
 				endcase

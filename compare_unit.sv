@@ -1,11 +1,4 @@
-typedef enum logic [2:0] {
-	COMPARE_UNIT_OP_EQ,
-	COMPARE_UNIT_OP_NE,
-	COMPARE_UNIT_OP_LT,
-	COMPARE_UNIT_OP_GE,
-	COMPARE_UNIT_OP_LTU,
-	COMPARE_UNIT_OP_GEU
-} compare_unit_op_t;
+import definitions::*;
 
 module compare_unit(
 	input compare_unit_op_t compare_unit_op_i,

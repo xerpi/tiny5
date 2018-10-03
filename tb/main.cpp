@@ -110,7 +110,7 @@ static int load_file_hex(const char *file, uint32_t addr)
 		int ret;
 		uint8_t data;
 
-		ret = fscanf(fp, "%2hx", &data);
+		ret = fscanf(fp, "%2hhx", &data);
 		if (ret == -1) {
 			if (errno != 0) {
 				printf("Error loading '%s': %s\n", file,

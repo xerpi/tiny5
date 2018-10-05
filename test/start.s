@@ -1,15 +1,12 @@
 	.text
 	.global _start
 _start:
-	li x1, 0xAA00
-	li x2, 0xBB
+	li x1, 0x01
+	li x2, 0x02
 	add x3, x2, x1
-	sub x4, x3, x2
+	nop
+	nop
+	add x4, x3, x2
 
-	la x5, var
-	sw x4, 0(x5)
-	lw x6, 0(x5)
-
-	.data
-var:
-	.word 0
+	nop
+	nop

@@ -285,4 +285,69 @@ typedef struct packed {
 	regfile_in_sel_t regfile_in_sel;
 } pipeline_wb_ctrl_t;
 
+/* Helper functions */
+
+function instruction_reads_from_regfile_rs1(input instruction_t instr);
+	case (instr.common.opcode)
+	OPCODE_JALR,
+	OPCODE_BRANCH,
+	OPCODE_LOAD,
+	OPCODE_STORE,
+	OPCODE_OP_IMM,
+	OPCODE_OP:
+		return 1;
+	OPCODE_SYSTEM: begin
+		case (instr.itype.funct3)
+		FUNCT3_SYSTEM_CSRRW,
+		FUNCT3_SYSTEM_CSRRS,
+		FUNCT3_SYSTEM_CSRRC:
+			return 1;
+		default:
+			return 0;
+		endcase
+	end
+	default:
+		return 0;
+	endcase
+endfunction
+
+function instruction_reads_from_regfile_rs2(input instruction_t instr);
+	case (instr.common.opcode)
+	OPCODE_BRANCH,
+	OPCODE_STORE,
+	OPCODE_OP:
+		return 1;
+	default:
+		return 0;
+	endcase
+endfunction
+
+function instruction_writes_to_regfile(input instruction_t instr);
+	case (instr.common.opcode)
+	OPCODE_LUI,
+	OPCODE_AUIPC,
+	OPCODE_JAL,
+	OPCODE_JALR,
+	OPCODE_LOAD,
+	OPCODE_OP_IMM,
+	OPCODE_OP:
+		return 1;
+	OPCODE_SYSTEM: begin
+		case (instr.itype.funct3)
+		FUNCT3_SYSTEM_CSRRW,
+		FUNCT3_SYSTEM_CSRRS,
+		FUNCT3_SYSTEM_CSRRC,
+		FUNCT3_SYSTEM_CSRRWI,
+		FUNCT3_SYSTEM_CSRRSI,
+		FUNCT3_SYSTEM_CSRRCI:
+			return 1;
+		default:
+			return 0;
+		endcase
+	end
+	default:
+		return 0;
+	endcase
+endfunction
+
 endpackage

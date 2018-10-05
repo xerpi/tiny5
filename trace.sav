@@ -1,20 +1,21 @@
 [*]
 [*] GTKWave Analyzer v3.3.94 (w)1999-2018 BSI
-[*] Wed Oct  3 16:34:27 2018
+[*] Fri Oct  5 17:06:34 2018
 [*]
-[dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.vcd"
-[dumpfile_mtime] "Wed Oct  3 16:32:05 2018"
-[dumpfile_size] 1428457
+[dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.fst"
+[dumpfile_mtime] "Fri Oct  5 17:06:05 2018"
+[dumpfile_size] 29070
 [savefile] "/home/xerpi/Desktop/tiny5/tiny5/trace.sav"
 [timestart] 0
 [size] 1920 1025
 [pos] -1 -1
-*-2.000000 4 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.000000 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top_dpi_mem.
 [treeopen] TOP.top_dpi_mem.dp.
+[treeopen] TOP.top_dpi_mem.dp.regfile.
 [sst_width] 222
-[signals_width] 225
+[signals_width] 519
 [sst_expanded] 1
 [sst_vpaned_height] 292
 @28
@@ -30,9 +31,19 @@ TOP.top_dpi_mem.dp.ex_mem_reg[160:0]
 TOP.top_dpi_mem.dp.mem_wb_reg[160:0]
 @1000200
 -Pipeline registers
+@800200
+-Hazards
+@28
+TOP.top_dpi_mem.dp.control.ex_data_hazard
+@1000200
+-Hazards
 @22
 TOP.top_dpi_mem.dp.next_pc[31:0]
+@23
 TOP.top_dpi_mem.dp.regfile.registers(1)[31:0]
+@22
 TOP.top_dpi_mem.dp.regfile.registers(2)[31:0]
+TOP.top_dpi_mem.dp.regfile.registers(3)[31:0]
+TOP.top_dpi_mem.dp.regfile.registers(4)[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

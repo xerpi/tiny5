@@ -34,6 +34,17 @@ module control(
 	/* ID stage */
 	/* assign id_ctrl_o.unused = ¿? */
 
+	logic ex_data_hazard;
+
+	assign ex_data_hazard = (
+		instruction_writes_to_regfile(id_ex_reg_i.instr) &&
+		(id_ex_reg_i.instr.common.rd != 0) &&
+			((instruction_reads_from_regfile_rs1(if_id_reg_i.instr) &&
+				(if_id_reg_i.instr.common.rs1 == id_ex_reg_i.instr.common.rd)) ||
+			(instruction_reads_from_regfile_rs2(if_id_reg_i.instr) &&
+				(if_id_reg_i.instr.common.rs2 == id_ex_reg_i.instr.common.rd)))
+	);
+
 	/* EX stage */
 	always_comb begin
 		priority case (id_ex_reg_i.instr.common.opcode)

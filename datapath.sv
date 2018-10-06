@@ -69,7 +69,10 @@ module datapath(
 	end
 
 	always_ff @(posedge clk_i) begin
-		if_id_reg <= if_ctrl.if_id_reg_stall ? if_id_reg : next_if_id_reg;
+		if (reset_i)
+			if_id_reg <= 'b0;
+		else
+			if_id_reg <= if_ctrl.if_id_reg_stall ? if_id_reg : next_if_id_reg;
 	end
 
 	/* ID stage */
@@ -104,7 +107,10 @@ module datapath(
 	);
 
 	always_ff @(posedge clk_i) begin
-		id_ex_reg <= next_id_ex_reg;
+		if (reset_i)
+			id_ex_reg <= 'b0;
+		else
+			id_ex_reg <= next_id_ex_reg;
 	end
 
 	/* EX stage */
@@ -149,7 +155,10 @@ module datapath(
 	);
 
 	always_ff @(posedge clk_i) begin
-		ex_mem_reg <= next_ex_mem_reg;
+		if (reset_i)
+			ex_mem_reg <= 'b0;
+		else
+			ex_mem_reg <= next_ex_mem_reg;
 	end
 
 	/* MEM stage */
@@ -168,7 +177,10 @@ module datapath(
 	assign next_mem_wb_reg.valid = ex_mem_reg.valid;
 
 	always_ff @(posedge clk_i) begin
-		mem_wb_reg <= next_mem_wb_reg;
+		if (reset_i)
+			mem_wb_reg <= 'b0;
+		else
+			mem_wb_reg <= next_mem_wb_reg;
 	end
 
 	/* WB stage */

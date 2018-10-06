@@ -32,18 +32,19 @@ module control(
 	assign if_ctrl_o.next_pc_sel = NEXT_PC_SEL_PC_4;
 
 	/* ID stage */
-	/* assign id_ctrl_o.unused = ¿? */
-
 	logic ex_data_hazard;
+	logic mem_data_hazard;
+	logic wb_data_hazard;
+	logic data_hazard;
 
-	assign ex_data_hazard = (
-		instruction_writes_to_regfile(id_ex_reg_i.instr) &&
-		(id_ex_reg_i.instr.common.rd != 0) &&
-			((instruction_reads_from_regfile_rs1(if_id_reg_i.instr) &&
-				(if_id_reg_i.instr.common.rs1 == id_ex_reg_i.instr.common.rd)) ||
-			(instruction_reads_from_regfile_rs2(if_id_reg_i.instr) &&
-				(if_id_reg_i.instr.common.rs2 == id_ex_reg_i.instr.common.rd)))
-	);
+	assign ex_data_hazard = id_ex_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, id_ex_reg_i.instr);
+	assign mem_data_hazard = ex_mem_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, ex_mem_reg_i.instr);
+	assign wb_data_hazard = mem_wb_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, mem_wb_reg_i.instr);
+	assign data_hazard = ex_data_hazard || mem_data_hazard || wb_data_hazard;
+
+	assign id_ctrl_o.pc_reg_stall = data_hazard;
+	assign id_ctrl_o.if_id_reg_stall = data_hazard;
+	assign id_ctrl_o.id_ex_reg_valid = !data_hazard;
 
 	/* EX stage */
 	always_comb begin
@@ -218,6 +219,9 @@ module control(
 			endcase
 		end
 		endcase
+
+		if (!ex_mem_reg_i.valid)
+			mem_ctrl_o.dmem_wr_enable = 0;
 	end
 
 	/* WB stage */
@@ -274,5 +278,10 @@ module control(
 			endcase
 		end
 		endcase
+
+		if (!mem_wb_reg_i.valid) begin
+			wb_ctrl_o.regfile_we = 0;
+			wb_ctrl_o.csr_we = 0;
+		end
 	end
 endmodule

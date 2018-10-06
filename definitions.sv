@@ -235,6 +235,7 @@ typedef struct packed {
 	logic [31:0] regfile_out1;
 	logic [31:0] regfile_out2;
 	logic [31:0] csr_out;
+	logic valid;
 } pipeline_id_ex_reg_t;
 
 typedef struct packed {
@@ -244,6 +245,7 @@ typedef struct packed {
 	logic [31:0] csr_out;
 	logic [31:0] alu_out;
 	logic cmp_unit_res;
+	logic valid;
 } pipeline_ex_mem_reg_t;
 
 typedef struct packed {
@@ -253,6 +255,7 @@ typedef struct packed {
 	logic [31:0] alu_out;
 	logic cmp_unit_res;
 	logic [31:0] dmem_rd_data;
+	logic valid;
 } pipeline_mem_wb_reg_t;
 
 /* Pipeline per-stage control signals */
@@ -263,7 +266,9 @@ typedef struct packed {
 } pipeline_if_ctrl_t;
 
 typedef struct packed {
-	logic unused; /* TODO, needed? */
+	logic pc_reg_stall;
+	logic if_id_reg_stall;
+	logic id_ex_reg_valid;
 } pipeline_id_ctrl_t;
 
 typedef struct packed {
@@ -348,6 +353,14 @@ function instruction_writes_to_regfile(input instruction_t instr);
 	default:
 		return 0;
 	endcase
+endfunction
+
+function data_hazard_raw_check(input instruction_t instr_rd, input instruction_t instr_wr);
+	return instruction_writes_to_regfile(instr_wr) && (instr_wr.common.rd != 0) &&
+		((instruction_reads_from_regfile_rs1(instr_rd) &&
+			(instr_rd.common.rs1 == instr_wr.common.rd)) ||
+		(instruction_reads_from_regfile_rs2(instr_rd) &&
+			(instr_rd.common.rs2 == instr_wr.common.rd)));
 endfunction
 
 endpackage

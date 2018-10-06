@@ -70,14 +70,17 @@ module datapath(
 		if (reset_i)
 			pc <= 'h00010000;
 		else if (if_ctrl.pc_we)
-			pc <= next_pc;
+			pc <= id_ctrl.pc_reg_stall ? pc : next_pc;
+	end
 
-		if_id_reg <= next_if_id_reg;
+	always_ff @(posedge clk_i) begin
+		if_id_reg <= id_ctrl.if_id_reg_stall ? if_id_reg : next_if_id_reg;
 	end
 
 	/* ID stage */
 	assign next_id_ex_reg.pc = if_id_reg.pc;
 	assign next_id_ex_reg.instr = if_id_reg.instr;
+	assign next_id_ex_reg.valid = id_ctrl.id_ex_reg_valid;
 
 	regfile regfile(
 		.clk_i(clk_i),
@@ -114,6 +117,7 @@ module datapath(
 	assign next_ex_mem_reg.instr = id_ex_reg.instr;
 	assign next_ex_mem_reg.regfile_out2 = id_ex_reg.regfile_out2;
 	assign next_ex_mem_reg.csr_out = id_ex_reg.csr_out;
+	assign next_ex_mem_reg.valid = id_ex_reg.valid;
 
 	always_comb begin
 		priority case (ex_ctrl.alu_in1_sel)
@@ -167,6 +171,7 @@ module datapath(
 	assign next_mem_wb_reg.alu_out = ex_mem_reg.alu_out;
 	assign next_mem_wb_reg.cmp_unit_res = ex_mem_reg.cmp_unit_res;
 	assign next_mem_wb_reg.dmem_rd_data = dmemif.rd_data;
+	assign next_mem_wb_reg.valid = ex_mem_reg.valid;
 
 	always_ff @(posedge clk_i) begin
 		mem_wb_reg <= next_mem_wb_reg;

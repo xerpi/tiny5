@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.94 (w)1999-2018 BSI
-[*] Fri Oct  5 17:06:34 2018
+[*] Sat Oct  6 07:28:53 2018
 [*]
 [dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.fst"
-[dumpfile_mtime] "Fri Oct  5 17:06:05 2018"
-[dumpfile_size] 29070
+[dumpfile_mtime] "Sat Oct  6 07:27:49 2018"
+[dumpfile_size] 28530
 [savefile] "/home/xerpi/Desktop/tiny5/tiny5/trace.sav"
 [timestart] 0
 [size] 1920 1025
 [pos] -1 -1
-*-2.000000 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.000000 6 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top_dpi_mem.
 [treeopen] TOP.top_dpi_mem.dp.
@@ -23,25 +23,27 @@ TOP.top_dpi_mem.reset_i
 TOP.top_dpi_mem.clk_i
 @800200
 -Pipeline registers
-@22
+@23
 TOP.top_dpi_mem.dp.pc[31:0]
+@22
 TOP.top_dpi_mem.dp.if_id_reg[63:0]
-TOP.top_dpi_mem.dp.id_ex_reg[191:0]
-TOP.top_dpi_mem.dp.ex_mem_reg[160:0]
-TOP.top_dpi_mem.dp.mem_wb_reg[160:0]
+TOP.top_dpi_mem.dp.id_ex_reg[192:0]
+TOP.top_dpi_mem.dp.ex_mem_reg[161:0]
+TOP.top_dpi_mem.dp.mem_wb_reg[161:0]
 @1000200
 -Pipeline registers
 @800200
 -Hazards
 @28
 TOP.top_dpi_mem.dp.control.ex_data_hazard
+TOP.top_dpi_mem.dp.control.mem_data_hazard
+TOP.top_dpi_mem.dp.control.wb_data_hazard
+TOP.top_dpi_mem.dp.control.data_hazard
 @1000200
 -Hazards
 @22
 TOP.top_dpi_mem.dp.next_pc[31:0]
-@23
 TOP.top_dpi_mem.dp.regfile.registers(1)[31:0]
-@22
 TOP.top_dpi_mem.dp.regfile.registers(2)[31:0]
 TOP.top_dpi_mem.dp.regfile.registers(3)[31:0]
 TOP.top_dpi_mem.dp.regfile.registers(4)[31:0]

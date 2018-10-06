@@ -8,10 +8,10 @@
 #include VTOP_MODULE_DPI_HEADER
 
 #ifndef TRACE_FILE
-#define TRACE_FILE "trace.vcd"
+#define TRACE_FILE "trace.fst"
 #endif
 
-#define DEFAULT_TICKS 1000
+#define DEFAULT_TICKS 2000
 
 static void usage(char *argv[]);
 

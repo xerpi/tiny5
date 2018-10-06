@@ -1,16 +1,16 @@
 #include "Tiny5Tb.hpp"
 
 Tiny5Tb::Tiny5Tb(VTOP_MODULE *top) :
-	top(top), timeStamp(0), vcd(nullptr)
+	top(top), timeStamp(0), fst(nullptr)
 {
 }
 
 Tiny5Tb::~Tiny5Tb()
 {
-	if (vcd) {
-		vcd->dump(timeStamp);
-		vcd->close();
-		delete vcd;
+	if (fst) {
+		fst->dump(timeStamp);
+		fst->close();
+		delete fst;
 	}
 }
 
@@ -45,17 +45,17 @@ void Tiny5Tb::tick(void)
 
 void Tiny5Tb::enableTracing(const std::string &name, int levels, int options)
 {
-	if (vcd)
+	if (fst)
 		return;
 
 	Verilated::traceEverOn(true);
 
-	vcd = new VerilatedVcdC;
-	if (!vcd)
+	fst = new VerilatedFstC;
+	if (!fst)
 		return;
 
-	top->trace(vcd, levels, options);
-	vcd->open(name.c_str());
+	top->trace(fst, levels, options);
+	fst->open(name.c_str());
 }
 
 uint64_t Tiny5Tb::getTimeStamp(void)
@@ -65,8 +65,8 @@ uint64_t Tiny5Tb::getTimeStamp(void)
 
 void Tiny5Tb::advanceTimeStamp(void)
 {
-	if (vcd)
-		vcd->dump(timeStamp);
+	if (fst)
+		fst->dump(timeStamp);
 
 	timeStamp++;
 }

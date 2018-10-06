@@ -2,7 +2,7 @@ VERILATOR ?= verilator
 
 VERILATOR_TOP_MODULE = top_dpi_mem
 MODELSIM_TOP_MODULE = top_simple_mem
-TRACE_FILE = trace.vcd
+TRACE_FILE = trace.fst
 
 COMMON_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
 	datapath.sv mem_if.sv regfile.sv csr.sv immediate.sv
@@ -21,7 +21,7 @@ all: lint
 
 #### Verilator ####
 obj_dir/$(VERILATOR_VTOP): $(VERILATOR_SOURCES) $(VERILATOR_TB_SOURCES)
-	$(VERILATOR) $(VERILATOR_FLAGS) --trace --cc --exe $^ --top-module $(VERILATOR_TOP_MODULE)
+	$(VERILATOR) $(VERILATOR_FLAGS) --trace-fst --cc --exe $^ --top-module $(VERILATOR_TOP_MODULE)
 	make -j4 -k -C obj_dir -f $(VERILATOR_VTOP).mk $(VERILATOR_VTOP)
 
 verilate: obj_dir/$(VERILATOR_VTOP)
@@ -30,7 +30,7 @@ lint:
 	@$(VERILATOR) -Wall -Wno-fatal --lint-only $(VERILATOR_SOURCES)
 
 run: obj_dir/$(VERILATOR_VTOP) test.bin
-	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)
+	obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)
 
 $(TRACE_FILE): run
 
@@ -78,7 +78,8 @@ riscv-tests-clean:
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
 clean: riscv-tests-clean
-	@rm -rf obj_dir work $(TRACE_FILE) test.elf test.bin test.hex.txt
+	@rm -rf obj_dir work $(TRACE_FILE) $(TRACE_FILE).hier test.elf test.bin test.hex.txt \
+		vsim.wlf transcript
 
 .PHONY:
 	verilate run trace gtkwave riscv-tests clean riscv-tests-clean

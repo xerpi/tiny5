@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <verilated.h>
-#include <verilated_vcd_c.h>
+#include <verilated_fst_c.h>
 #include "top_module.h"
 #include VTOP_MODULE_HEADER
 
@@ -30,7 +30,7 @@ private:
 	VTOP_MODULE *top;
 	uint64_t timeStamp;
 	std::map<uint32_t, uint8_t> mem;
-	VerilatedVcdC *vcd;
+	VerilatedFstC *fst;
 
 	void advanceTimeStamp(void);
 };

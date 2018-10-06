@@ -2,3 +2,7 @@ obj_dir/
 *.bin
 *.elf
 *.vcd
+*.fst
+*.fst.hier
+*.wlf
+transcript

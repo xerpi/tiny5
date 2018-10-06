@@ -21,11 +21,11 @@ module datapath(
 	pipeline_mem_wb_reg_t next_mem_wb_reg;
 
 	/* Pipeline per-stage control signals (control output) */
-	pipeline_if_ctrl_t control_if_ctrl;
-	pipeline_id_ctrl_t control_id_ctrl;
-	pipeline_ex_ctrl_t control_ex_ctrl;
-	pipeline_mem_ctrl_t control_mem_ctrl;
-	pipeline_wb_ctrl_t control_wb_ctrl;
+	pipeline_if_ctrl_t if_ctrl;
+	pipeline_id_ctrl_t id_ctrl;
+	pipeline_ex_ctrl_t ex_ctrl;
+	pipeline_mem_ctrl_t mem_ctrl;
+	pipeline_wb_ctrl_t wb_ctrl;
 
 	logic [31:0] regfile_rin;
 	logic [31:0] alu_in1;
@@ -36,11 +36,11 @@ module datapath(
 		.id_ex_reg_i(id_ex_reg),
 		.ex_mem_reg_i(ex_mem_reg),
 		.mem_wb_reg_i(mem_wb_reg),
-		.if_ctrl_o(control_if_ctrl),
-		.id_ctrl_o(control_id_ctrl),
-		.ex_ctrl_o(control_ex_ctrl),
-		.mem_ctrl_o(control_mem_ctrl),
-		.wb_ctrl_o(control_wb_ctrl)
+		.if_ctrl_o(if_ctrl),
+		.id_ctrl_o(id_ctrl),
+		.ex_ctrl_o(ex_ctrl),
+		.mem_ctrl_o(mem_ctrl),
+		.wb_ctrl_o(wb_ctrl)
 	);
 
 	/* IF stage */
@@ -52,7 +52,7 @@ module datapath(
 	assign next_if_id_reg.instr = imemif.rd_data;
 
 	always_comb begin
-		priority case (control_if_ctrl.next_pc_sel)
+		priority case (if_ctrl.next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
 		NEXT_PC_SEL_ALU_OUT:
@@ -69,7 +69,7 @@ module datapath(
 		/* TODO: Improve this */
 		if (reset_i)
 			pc <= 'h00010000;
-		else if (control_if_ctrl.pc_we)
+		else if (if_ctrl.pc_we)
 			pc <= next_pc;
 
 		if_id_reg <= next_if_id_reg;
@@ -85,7 +85,7 @@ module datapath(
 		.rs2_i(if_id_reg.instr.common.rs2),
 		.rd_i(mem_wb_reg.instr.common.rd),
 		.rin_i(regfile_rin),
-		.we_i(control_wb_ctrl.regfile_we),
+		.we_i(wb_ctrl.regfile_we),
 		.rout1_o(next_id_ex_reg.regfile_out1),
 		.rout2_o(next_id_ex_reg.regfile_out2)
 	);
@@ -96,7 +96,7 @@ module datapath(
 		.rs_i(if_id_reg.instr.itype.imm),
 		.rd_i(mem_wb_reg.instr.itype.imm),
 		.in_i(mem_wb_reg.alu_out),
-		.we_i(control_wb_ctrl.csr_we),
+		.we_i(wb_ctrl.csr_we),
 		.out_o(next_id_ex_reg.csr_out)
 	);
 
@@ -116,7 +116,7 @@ module datapath(
 	assign next_ex_mem_reg.csr_out = id_ex_reg.csr_out;
 
 	always_comb begin
-		priority case (control_ex_ctrl.alu_in1_sel)
+		priority case (ex_ctrl.alu_in1_sel)
 		ALU_IN1_SEL_REGFILE_OUT1:
 			alu_in1 = id_ex_reg.regfile_out1;
 		ALU_IN1_SEL_PC:
@@ -125,7 +125,7 @@ module datapath(
 			alu_in1 = id_ex_reg.csr_out;
 		endcase
 
-		priority case (control_ex_ctrl.alu_in2_sel)
+		priority case (ex_ctrl.alu_in2_sel)
 		ALU_IN2_SEL_REGFILE_OUT2:
 			alu_in2 = id_ex_reg.regfile_out2;
 		ALU_IN2_SEL_IMM:
@@ -136,14 +136,14 @@ module datapath(
 	end
 
 	alu alu(
-		.alu_op_i(control_ex_ctrl.alu_op),
+		.alu_op_i(ex_ctrl.alu_op),
 		.in1_i(alu_in1),
 		.in2_i(alu_in2),
 		.out_o(next_ex_mem_reg.alu_out)
 	);
 
 	compare_unit cmp_unit(
-		.compare_unit_op_i(control_ex_ctrl.compare_unit_op),
+		.compare_unit_op_i(ex_ctrl.compare_unit_op),
 		.in1_i(id_ex_reg.regfile_out1),
 		.in2_i(id_ex_reg.regfile_out2),
 		.res_o(next_ex_mem_reg.cmp_unit_res)
@@ -155,11 +155,11 @@ module datapath(
 
 	/* MEM stage */
 	assign dmemif.rd_addr = ex_mem_reg.alu_out;
-	assign dmemif.rd_size = control_mem_ctrl.dmem_rd_size;
+	assign dmemif.rd_size = mem_ctrl.dmem_rd_size;
 	assign dmemif.wr_addr = ex_mem_reg.alu_out;
 	assign dmemif.wr_data = ex_mem_reg.regfile_out2;
-	assign dmemif.wr_size = control_mem_ctrl.dmem_wr_size;
-	assign dmemif.wr_enable = control_mem_ctrl.dmem_wr_enable;
+	assign dmemif.wr_size = mem_ctrl.dmem_wr_size;
+	assign dmemif.wr_enable = mem_ctrl.dmem_wr_enable;
 
 	assign next_mem_wb_reg.pc = ex_mem_reg.pc;
 	assign next_mem_wb_reg.instr = ex_mem_reg.instr;
@@ -174,7 +174,7 @@ module datapath(
 
 	/* WB stage */
 	always_comb begin
-		priority case (control_wb_ctrl.regfile_in_sel)
+		priority case (wb_ctrl.regfile_in_sel)
 		REGFILE_IN_SEL_ALU_OUT:
 			regfile_rin = mem_wb_reg.alu_out;
 		REGFILE_IN_SEL_PC_4:

@@ -164,10 +164,9 @@ typedef enum logic [11:0] {
 
 /* Multiplexer select */
 
-typedef enum logic [1:0] {
+typedef enum logic {
 	NEXT_PC_SEL_PC_4,
-	NEXT_PC_SEL_ALU_OUT,
-	NEXT_PC_SEL_COMPARE_UNIT_OUT
+	NEXT_PC_SEL_ALU_OUT
 } next_pc_sel_t;
 
 typedef enum logic [2:0] {
@@ -226,6 +225,7 @@ typedef enum logic [1:0] {
 typedef struct packed {
 	logic [31:0] pc;
 	instruction_t instr;
+	logic valid;
 } pipeline_if_id_reg_t;
 
 typedef struct packed {
@@ -253,7 +253,6 @@ typedef struct packed {
 	instruction_t instr;
 	logic [31:0] csr_out;
 	logic [31:0] alu_out;
-	logic cmp_unit_res;
 	logic [31:0] dmem_rd_data;
 	logic valid;
 } pipeline_mem_wb_reg_t;
@@ -263,11 +262,12 @@ typedef struct packed {
 typedef struct packed {
 	logic pc_we;
 	next_pc_sel_t next_pc_sel;
+	logic pc_reg_stall;
+	logic if_id_reg_stall;
+	logic if_id_reg_valid;
 } pipeline_if_ctrl_t;
 
 typedef struct packed {
-	logic pc_reg_stall;
-	logic if_id_reg_stall;
 	logic id_ex_reg_valid;
 } pipeline_id_ctrl_t;
 
@@ -276,6 +276,7 @@ typedef struct packed {
 	alu_in1_sel_t alu_in1_sel;
 	alu_in2_sel_t alu_in2_sel;
 	compare_unit_op_t compare_unit_op;
+	logic ex_mem_reg_valid;
 } pipeline_ex_ctrl_t;
 
 typedef struct packed {

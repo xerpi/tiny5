@@ -11,27 +11,7 @@ module control(
 	output pipeline_mem_ctrl_t mem_ctrl_o,
 	output pipeline_wb_ctrl_t wb_ctrl_o
 );
-
-	/*always_comb begin
-		next_pc_sel_o = NEXT_PC_SEL_PC_4;
-
-		priority case (instr.common.opcode)
-		OPCODE_JAL: begin
-			next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
-		end
-		OPCODE_JALR: begin
-			next_pc_sel_o = NEXT_PC_SEL_ALU_OUT;
-		end
-		OPCODE_BRANCH: begin
-			next_pc_sel_o = NEXT_PC_SEL_COMPARE_UNIT_OUT;
-		end
-	end*/
-
-	/* IF stage */
-	assign if_ctrl_o.pc_we = 1;
-	assign if_ctrl_o.next_pc_sel = NEXT_PC_SEL_PC_4;
-
-	/* ID stage */
+	/* Check data hazards */
 	logic ex_data_hazard;
 	logic mem_data_hazard;
 	logic wb_data_hazard;
@@ -42,11 +22,44 @@ module control(
 	assign wb_data_hazard = mem_wb_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, mem_wb_reg_i.instr);
 	assign data_hazard = ex_data_hazard || mem_data_hazard || wb_data_hazard;
 
-	assign id_ctrl_o.pc_reg_stall = data_hazard;
-	assign id_ctrl_o.if_id_reg_stall = data_hazard;
-	assign id_ctrl_o.id_ex_reg_valid = !data_hazard;
+	/* IF stage */
+	logic control_hazard;
+
+	assign if_ctrl_o.pc_we = 1;
+
+	always_comb begin
+		control_hazard = 0;
+		if_ctrl_o.next_pc_sel = NEXT_PC_SEL_PC_4;
+
+		if (ex_mem_reg_i.valid) begin
+			priority case (ex_mem_reg_i.instr.common.opcode)
+			OPCODE_JAL,
+			OPCODE_JALR: begin
+				control_hazard = 1;
+				if_ctrl_o.next_pc_sel = NEXT_PC_SEL_ALU_OUT;
+			end
+			OPCODE_BRANCH: begin
+				if (ex_mem_reg_i.cmp_unit_res) begin
+					control_hazard = 1;
+					if_ctrl_o.next_pc_sel = NEXT_PC_SEL_ALU_OUT;
+				end else begin
+					if_ctrl_o.next_pc_sel = NEXT_PC_SEL_PC_4;
+				end
+			end
+			endcase
+		end
+	end
+
+	assign if_ctrl_o.pc_reg_stall = data_hazard && !control_hazard;
+	assign if_ctrl_o.if_id_reg_stall = data_hazard && !control_hazard;
+	assign if_ctrl_o.if_id_reg_valid = !control_hazard;
+
+	/* ID stage */
+	assign id_ctrl_o.id_ex_reg_valid = if_id_reg_i.valid && !data_hazard && !control_hazard;
 
 	/* EX stage */
+	assign ex_ctrl_o.ex_mem_reg_valid = id_ex_reg_i.valid && !control_hazard;
+
 	always_comb begin
 		priority case (id_ex_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin

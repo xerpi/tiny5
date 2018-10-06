@@ -50,31 +50,26 @@ module datapath(
 
 	assign next_if_id_reg.pc = pc;
 	assign next_if_id_reg.instr = imemif.rd_data;
+	assign next_if_id_reg.valid = if_ctrl.if_id_reg_valid;
 
 	always_comb begin
 		priority case (if_ctrl.next_pc_sel)
 		NEXT_PC_SEL_PC_4:
 			next_pc = pc + 4;
 		NEXT_PC_SEL_ALU_OUT:
-			next_pc = mem_wb_reg.alu_out;
-		NEXT_PC_SEL_COMPARE_UNIT_OUT:
-			if (mem_wb_reg.cmp_unit_res == 0)
-				next_pc = pc + 4;
-			else
-				next_pc = mem_wb_reg.alu_out;
+			next_pc = ex_mem_reg.alu_out;
 		endcase
 	end
 
 	always_ff @(posedge clk_i) begin
-		/* TODO: Improve this */
 		if (reset_i)
 			pc <= 'h00010000;
 		else if (if_ctrl.pc_we)
-			pc <= id_ctrl.pc_reg_stall ? pc : next_pc;
+			pc <= if_ctrl.pc_reg_stall ? pc : next_pc;
 	end
 
 	always_ff @(posedge clk_i) begin
-		if_id_reg <= id_ctrl.if_id_reg_stall ? if_id_reg : next_if_id_reg;
+		if_id_reg <= if_ctrl.if_id_reg_stall ? if_id_reg : next_if_id_reg;
 	end
 
 	/* ID stage */
@@ -117,7 +112,7 @@ module datapath(
 	assign next_ex_mem_reg.instr = id_ex_reg.instr;
 	assign next_ex_mem_reg.regfile_out2 = id_ex_reg.regfile_out2;
 	assign next_ex_mem_reg.csr_out = id_ex_reg.csr_out;
-	assign next_ex_mem_reg.valid = id_ex_reg.valid;
+	assign next_ex_mem_reg.valid = ex_ctrl.ex_mem_reg_valid;
 
 	always_comb begin
 		priority case (ex_ctrl.alu_in1_sel)
@@ -169,7 +164,6 @@ module datapath(
 	assign next_mem_wb_reg.instr = ex_mem_reg.instr;
 	assign next_mem_wb_reg.csr_out = ex_mem_reg.csr_out;
 	assign next_mem_wb_reg.alu_out = ex_mem_reg.alu_out;
-	assign next_mem_wb_reg.cmp_unit_res = ex_mem_reg.cmp_unit_res;
 	assign next_mem_wb_reg.dmem_rd_data = dmemif.rd_data;
 	assign next_mem_wb_reg.valid = ex_mem_reg.valid;
 
@@ -185,11 +179,11 @@ module datapath(
 		REGFILE_IN_SEL_PC_4:
 			regfile_rin = mem_wb_reg.pc + 4;
 		REGFILE_IN_SEL_MEM_RD:
-			regfile_rin = dmemif.rd_data;
+			regfile_rin = mem_wb_reg.dmem_rd_data;
 		REGFILE_IN_SEL_MEM_RD_SEXT8:
-			regfile_rin = {{24{dmemif.rd_data[7]}}, dmemif.rd_data[7:0]};
+			regfile_rin = {{24{mem_wb_reg.dmem_rd_data[7]}}, mem_wb_reg.dmem_rd_data[7:0]};
 		REGFILE_IN_SEL_MEM_RD_SEXT16:
-			regfile_rin = {{16{dmemif.rd_data[15]}}, dmemif.rd_data[15:0]};
+			regfile_rin = {{16{mem_wb_reg.dmem_rd_data[15]}}, mem_wb_reg.dmem_rd_data[15:0]};
 		REGFILE_IN_SEL_CSR_OUT:
 			regfile_rin = mem_wb_reg.csr_out;
 		endcase

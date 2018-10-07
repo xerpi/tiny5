@@ -27,7 +27,7 @@ module datapath(
 	pipeline_mem_ctrl_t mem_ctrl;
 	pipeline_wb_ctrl_t wb_ctrl;
 
-	logic [31:0] regfile_rin;
+	logic [31:0] regfile_wr_data;
 	logic [31:0] alu_in1;
 	logic [31:0] alu_in2;
 
@@ -82,23 +82,23 @@ module datapath(
 
 	regfile regfile(
 		.clk_i(clk_i),
-		.rs1_i(if_id_reg.instr.common.rs1),
-		.rs2_i(if_id_reg.instr.common.rs2),
-		.rd_i(mem_wb_reg.instr.common.rd),
-		.rin_i(regfile_rin),
-		.we_i(wb_ctrl.regfile_we),
-		.rout1_o(next_id_ex_reg.regfile_out1),
-		.rout2_o(next_id_ex_reg.regfile_out2)
+		.rd_addr1_i(if_id_reg.instr.common.rs1),
+		.rd_addr2_i(if_id_reg.instr.common.rs2),
+		.wr_addr_i(mem_wb_reg.instr.common.rd),
+		.wr_data_i(regfile_wr_data),
+		.wr_en_i(wb_ctrl.regfile_we),
+		.rd_data1_o(next_id_ex_reg.regfile_out1),
+		.rd_data2_o(next_id_ex_reg.regfile_out2)
 	);
 
 	csr csr(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
-		.rs_i(if_id_reg.instr.itype.imm),
-		.rd_i(mem_wb_reg.instr.itype.imm),
-		.in_i(mem_wb_reg.alu_out),
-		.we_i(wb_ctrl.csr_we),
-		.out_o(next_id_ex_reg.csr_out)
+		.rd_addr_i(if_id_reg.instr.itype.imm),
+		.wr_addr_i(mem_wb_reg.instr.itype.imm),
+		.wr_data_i(mem_wb_reg.alu_out),
+		.wr_en_i(wb_ctrl.csr_we),
+		.rd_data_o(next_id_ex_reg.csr_out)
 	);
 
 	immediate immediate(
@@ -187,17 +187,17 @@ module datapath(
 	always_comb begin
 		priority case (wb_ctrl.regfile_in_sel)
 		REGFILE_IN_SEL_ALU_OUT:
-			regfile_rin = mem_wb_reg.alu_out;
+			regfile_wr_data = mem_wb_reg.alu_out;
 		REGFILE_IN_SEL_PC_4:
-			regfile_rin = mem_wb_reg.pc + 4;
+			regfile_wr_data = mem_wb_reg.pc + 4;
 		REGFILE_IN_SEL_MEM_RD:
-			regfile_rin = mem_wb_reg.dmem_rd_data;
+			regfile_wr_data = mem_wb_reg.dmem_rd_data;
 		REGFILE_IN_SEL_MEM_RD_SEXT8:
-			regfile_rin = {{24{mem_wb_reg.dmem_rd_data[7]}}, mem_wb_reg.dmem_rd_data[7:0]};
+			regfile_wr_data = {{24{mem_wb_reg.dmem_rd_data[7]}}, mem_wb_reg.dmem_rd_data[7:0]};
 		REGFILE_IN_SEL_MEM_RD_SEXT16:
-			regfile_rin = {{16{mem_wb_reg.dmem_rd_data[15]}}, mem_wb_reg.dmem_rd_data[15:0]};
+			regfile_wr_data = {{16{mem_wb_reg.dmem_rd_data[15]}}, mem_wb_reg.dmem_rd_data[15:0]};
 		REGFILE_IN_SEL_CSR_OUT:
-			regfile_rin = mem_wb_reg.csr_out;
+			regfile_wr_data = mem_wb_reg.csr_out;
 		endcase
 	end
 endmodule

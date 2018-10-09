@@ -226,7 +226,7 @@ typedef struct packed {
 	logic [31:0] pc;
 	instruction_t instr;
 	logic valid;
-} pipeline_if_id_reg_t;
+} pipeline_id_reg_t;
 
 typedef struct packed {
 	logic [31:0] pc;
@@ -239,7 +239,7 @@ typedef struct packed {
 	logic regfile_we;
 	logic csr_we;
 	logic valid;
-} pipeline_id_ex_reg_t;
+} pipeline_ex_reg_t;
 
 typedef struct packed {
 	logic [31:0] pc;
@@ -252,7 +252,7 @@ typedef struct packed {
 	logic regfile_we;
 	logic csr_we;
 	logic valid;
-} pipeline_ex_mem_reg_t;
+} pipeline_mem_reg_t;
 
 typedef struct packed {
 	logic [31:0] pc;
@@ -264,7 +264,7 @@ typedef struct packed {
 	logic regfile_we;
 	logic csr_we;
 	logic valid;
-} pipeline_mem_wb_reg_t;
+} pipeline_wb_reg_t;
 
 /* Pipeline per-stage control signals */
 
@@ -272,12 +272,12 @@ typedef struct packed {
 	logic pc_we;
 	next_pc_sel_t next_pc_sel;
 	logic pc_reg_stall;
-	logic if_id_reg_stall;
-	logic if_id_reg_valid;
+	logic id_reg_stall;
+	logic id_reg_valid;
 } pipeline_if_ctrl_t;
 
 typedef struct packed {
-	logic id_ex_reg_valid;
+	logic ex_reg_valid;
 	logic regfile_we;
 	logic csr_we;
 } pipeline_id_ctrl_t;
@@ -287,7 +287,7 @@ typedef struct packed {
 	alu_in1_sel_t alu_in1_sel;
 	alu_in2_sel_t alu_in2_sel;
 	compare_unit_op_t compare_unit_op;
-	logic ex_mem_reg_valid;
+	logic mem_reg_valid;
 } pipeline_ex_ctrl_t;
 
 typedef struct packed {

@@ -1,10 +1,10 @@
 import definitions::*;
 
 module control(
-	input pipeline_if_id_reg_t if_id_reg_i,
-	input pipeline_id_ex_reg_t id_ex_reg_i,
-	input pipeline_ex_mem_reg_t ex_mem_reg_i,
-	input pipeline_mem_wb_reg_t mem_wb_reg_i,
+	input pipeline_id_reg_t id_reg_i,
+	input pipeline_ex_reg_t ex_reg_i,
+	input pipeline_mem_reg_t mem_reg_i,
+	input pipeline_wb_reg_t wb_reg_i,
 	output pipeline_if_ctrl_t if_ctrl_o,
 	output pipeline_id_ctrl_t id_ctrl_o,
 	output pipeline_ex_ctrl_t ex_ctrl_o,
@@ -17,9 +17,9 @@ module control(
 	logic wb_data_hazard;
 	logic data_hazard;
 
-	assign ex_data_hazard = id_ex_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, id_ex_reg_i.regfile_rd);
-	assign mem_data_hazard = ex_mem_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, ex_mem_reg_i.regfile_rd);
-	assign wb_data_hazard = mem_wb_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, mem_wb_reg_i.regfile_rd);
+	assign ex_data_hazard = ex_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, ex_reg_i.regfile_rd);
+	assign mem_data_hazard = mem_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, mem_reg_i.regfile_rd);
+	assign wb_data_hazard = wb_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, wb_reg_i.regfile_rd);
 	assign data_hazard = ex_data_hazard || mem_data_hazard || wb_data_hazard;
 
 	/* IF stage */
@@ -31,15 +31,15 @@ module control(
 		control_hazard = 0;
 		if_ctrl_o.next_pc_sel = NEXT_PC_SEL_PC_4;
 
-		if (ex_mem_reg_i.valid) begin
-			priority case (ex_mem_reg_i.instr.common.opcode)
+		if (mem_reg_i.valid) begin
+			priority case (mem_reg_i.instr.common.opcode)
 			OPCODE_JAL,
 			OPCODE_JALR: begin
 				control_hazard = 1;
 				if_ctrl_o.next_pc_sel = NEXT_PC_SEL_ALU_OUT;
 			end
 			OPCODE_BRANCH: begin
-				if (ex_mem_reg_i.cmp_unit_res) begin
+				if (mem_reg_i.cmp_unit_res) begin
 					control_hazard = 1;
 					if_ctrl_o.next_pc_sel = NEXT_PC_SEL_ALU_OUT;
 				end else begin
@@ -51,17 +51,17 @@ module control(
 	end
 
 	assign if_ctrl_o.pc_reg_stall = data_hazard && !control_hazard;
-	assign if_ctrl_o.if_id_reg_stall = data_hazard && !control_hazard;
-	assign if_ctrl_o.if_id_reg_valid = !control_hazard;
+	assign if_ctrl_o.id_reg_stall = data_hazard && !control_hazard;
+	assign if_ctrl_o.id_reg_valid = !control_hazard;
 
 	/* ID stage */
-	assign id_ctrl_o.id_ex_reg_valid = if_id_reg_i.valid && !data_hazard && !control_hazard;
+	assign id_ctrl_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
 
 	always_comb begin
 		id_ctrl_o.regfile_we = 0;
 		id_ctrl_o.csr_we = 0;
 
-		priority case (if_id_reg_i.instr.common.opcode)
+		priority case (id_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
 			id_ctrl_o.regfile_we = 1;
 		end
@@ -84,7 +84,7 @@ module control(
 			id_ctrl_o.regfile_we = 1;
 		end
 		OPCODE_SYSTEM: begin
-			priority case (if_id_reg_i.instr.itype.funct3)
+			priority case (id_reg_i.instr.itype.funct3)
 			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
 			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
 			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
@@ -95,17 +95,17 @@ module control(
 		end
 		endcase
 
-		if (!if_id_reg_i.valid) begin
+		if (!id_reg_i.valid) begin
 			id_ctrl_o.regfile_we = 0;
 			id_ctrl_o.csr_we = 0;
 		end
 	end
 
 	/* EX stage */
-	assign ex_ctrl_o.ex_mem_reg_valid = id_ex_reg_i.valid && !control_hazard;
+	assign ex_ctrl_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
 
 	always_comb begin
-		priority case (id_ex_reg_i.instr.common.opcode)
+		priority case (ex_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
 			ex_ctrl_o.alu_op = ALU_OP_IN2_PASSTHROUGH;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
@@ -130,7 +130,7 @@ module control(
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_PC;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 
-			priority case (id_ex_reg_i.instr.btype.funct3)
+			priority case (ex_reg_i.instr.btype.funct3)
 			FUNCT3_BRANCH_BEQ:
 				ex_ctrl_o.compare_unit_op = COMPARE_UNIT_OP_EQ;
 			FUNCT3_BRANCH_BNE:
@@ -159,7 +159,7 @@ module control(
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 
-			priority case (id_ex_reg_i.instr.itype.funct3)
+			priority case (ex_reg_i.instr.itype.funct3)
 			FUNCT3_OP_IMM_ADDI:
 				ex_ctrl_o.alu_op = ALU_OP_ADD;
 			FUNCT3_OP_IMM_SLTI:
@@ -175,7 +175,7 @@ module control(
 			FUNCT3_OP_IMM_SLLI:
 				ex_ctrl_o.alu_op = ALU_OP_SLL;
 			FUNCT3_OP_IMM_SRI:
-				if (id_ex_reg_i.instr.itype.imm[10] == 0)
+				if (ex_reg_i.instr.itype.imm[10] == 0)
 					ex_ctrl_o.alu_op = ALU_OP_SRL;
 				else
 					ex_ctrl_o.alu_op = ALU_OP_SRA;
@@ -185,9 +185,9 @@ module control(
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_REGFILE_OUT2;
 
-			priority case (id_ex_reg_i.instr.rtype.funct3)
+			priority case (ex_reg_i.instr.rtype.funct3)
 			FUNCT3_OP_ADD_SUB: begin
-				if (id_ex_reg_i.instr.rtype.funct7[5] == 0)
+				if (ex_reg_i.instr.rtype.funct7[5] == 0)
 					ex_ctrl_o.alu_op = ALU_OP_ADD;
 				else
 					ex_ctrl_o.alu_op = ALU_OP_SUB;
@@ -201,7 +201,7 @@ module control(
 			FUNCT3_OP_XOR:
 				ex_ctrl_o.alu_op = ALU_OP_XOR;
 			FUNCT3_OP_SR:
-				if (id_ex_reg_i.instr.rtype.funct7[5] == 0)
+				if (ex_reg_i.instr.rtype.funct7[5] == 0)
 					ex_ctrl_o.alu_op = ALU_OP_SRL;
 				else
 					ex_ctrl_o.alu_op = ALU_OP_SRA;
@@ -212,7 +212,7 @@ module control(
 			endcase
 		end
 		OPCODE_SYSTEM: begin
-			priority case (id_ex_reg_i.instr.itype.funct3)
+			priority case (ex_reg_i.instr.itype.funct3)
 			FUNCT3_SYSTEM_CSRRW: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 				ex_ctrl_o.alu_op = ALU_OP_IN1_PASSTHROUGH;
@@ -252,9 +252,9 @@ module control(
 		mem_ctrl_o.dmem_wr_size = MEM_ACCESS_SIZE_WORD;
 		mem_ctrl_o.dmem_wr_enable = 0;
 
-		priority case (ex_mem_reg_i.instr.common.opcode)
+		priority case (mem_reg_i.instr.common.opcode)
 		OPCODE_LOAD: begin
-			priority case (ex_mem_reg_i.instr.itype.funct3)
+			priority case (mem_reg_i.instr.itype.funct3)
 			FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
 				mem_ctrl_o.dmem_rd_size = MEM_ACCESS_SIZE_BYTE;
 			FUNCT3_LOAD_LH, FUNCT3_LOAD_LHU:
@@ -266,7 +266,7 @@ module control(
 		OPCODE_STORE: begin
 			mem_ctrl_o.dmem_wr_enable = 1;
 
-			priority case (ex_mem_reg_i.instr.itype.funct3)
+			priority case (mem_reg_i.instr.itype.funct3)
 			FUNCT3_STORE_SB:
 				mem_ctrl_o.dmem_wr_size = MEM_ACCESS_SIZE_BYTE;
 			FUNCT3_STORE_SH:
@@ -277,13 +277,13 @@ module control(
 		end
 		endcase
 
-		if (!ex_mem_reg_i.valid)
+		if (!mem_reg_i.valid)
 			mem_ctrl_o.dmem_wr_enable = 0;
 	end
 
 	/* WB stage */
 	always_comb begin
-		priority case (mem_wb_reg_i.instr.common.opcode)
+		priority case (wb_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
@@ -297,7 +297,7 @@ module control(
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_PC_4;
 		end
 		OPCODE_LOAD: begin
-			priority case (mem_wb_reg_i.instr.itype.funct3)
+			priority case (wb_reg_i.instr.itype.funct3)
 			FUNCT3_LOAD_LB:
 				wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_MEM_RD_SEXT8;
 			FUNCT3_LOAD_LH:
@@ -313,7 +313,7 @@ module control(
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
 		OPCODE_SYSTEM: begin
-			priority case (mem_wb_reg_i.instr.itype.funct3)
+			priority case (wb_reg_i.instr.itype.funct3)
 			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
 			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
 			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin

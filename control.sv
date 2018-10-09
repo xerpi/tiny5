@@ -59,6 +59,7 @@ module control(
 
 	always_comb begin
 		id_ctrl_o.regfile_we = 0;
+		id_ctrl_o.csr_we = 0;
 
 		priority case (if_id_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
@@ -88,6 +89,7 @@ module control(
 			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
 			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
 				id_ctrl_o.regfile_we = 1;
+				id_ctrl_o.csr_we = 1;
 			end
 			endcase
 		end
@@ -95,6 +97,7 @@ module control(
 
 		if (!if_id_reg_i.valid) begin
 			id_ctrl_o.regfile_we = 0;
+			id_ctrl_o.csr_we = 0;
 		end
 	end
 
@@ -280,8 +283,6 @@ module control(
 
 	/* WB stage */
 	always_comb begin
-		wb_ctrl_o.csr_we = 0;
-
 		priority case (mem_wb_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
@@ -316,15 +317,10 @@ module control(
 			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
 			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
 			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
-				wb_ctrl_o.csr_we = 1;
 				wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_CSR_OUT;
 			end
 			endcase
 		end
 		endcase
-
-		if (!mem_wb_reg_i.valid) begin
-			wb_ctrl_o.csr_we = 0;
-		end
 	end
 endmodule

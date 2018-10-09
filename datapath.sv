@@ -80,6 +80,7 @@ module datapath(
 	assign next_id_ex_reg.instr = if_id_reg.instr;
 	assign next_id_ex_reg.regfile_rd = if_id_reg.instr.common.rd;
 	assign next_id_ex_reg.regfile_we = id_ctrl.regfile_we;
+	assign next_id_ex_reg.csr_we = id_ctrl.csr_we;
 	assign next_id_ex_reg.valid = id_ctrl.id_ex_reg_valid;
 
 	regfile regfile(
@@ -99,7 +100,7 @@ module datapath(
 		.rd_addr_i(if_id_reg.instr.itype.imm),
 		.wr_addr_i(mem_wb_reg.instr.itype.imm),
 		.wr_data_i(mem_wb_reg.alu_out),
-		.wr_en_i(wb_ctrl.csr_we),
+		.wr_en_i(mem_wb_reg.csr_we & mem_wb_reg.valid),
 		.rd_data_o(next_id_ex_reg.csr_out)
 	);
 
@@ -122,6 +123,7 @@ module datapath(
 	assign next_ex_mem_reg.csr_out = id_ex_reg.csr_out;
 	assign next_ex_mem_reg.regfile_rd = id_ex_reg.regfile_rd;
 	assign next_ex_mem_reg.regfile_we = id_ex_reg.regfile_we;
+	assign next_ex_mem_reg.csr_we = id_ex_reg.csr_we;
 	assign next_ex_mem_reg.valid = ex_ctrl.ex_mem_reg_valid;
 
 	always_comb begin
@@ -180,6 +182,7 @@ module datapath(
 	assign next_mem_wb_reg.dmem_rd_data = dmemif.rd_data;
 	assign next_mem_wb_reg.regfile_rd = ex_mem_reg.regfile_rd;
 	assign next_mem_wb_reg.regfile_we = ex_mem_reg.regfile_we;
+	assign next_mem_wb_reg.csr_we = ex_mem_reg.csr_we;
 	assign next_mem_wb_reg.valid = ex_mem_reg.valid;
 
 	always_ff @(posedge clk_i) begin

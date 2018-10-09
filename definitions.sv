@@ -237,6 +237,7 @@ typedef struct packed {
 	logic [31:0] csr_out;
 	logic [4:0] regfile_rd;
 	logic regfile_we;
+	logic csr_we;
 	logic valid;
 } pipeline_id_ex_reg_t;
 
@@ -249,6 +250,7 @@ typedef struct packed {
 	logic cmp_unit_res;
 	logic [4:0] regfile_rd;
 	logic regfile_we;
+	logic csr_we;
 	logic valid;
 } pipeline_ex_mem_reg_t;
 
@@ -260,6 +262,7 @@ typedef struct packed {
 	logic [31:0] dmem_rd_data;
 	logic [4:0] regfile_rd;
 	logic regfile_we;
+	logic csr_we;
 	logic valid;
 } pipeline_mem_wb_reg_t;
 
@@ -276,6 +279,7 @@ typedef struct packed {
 typedef struct packed {
 	logic id_ex_reg_valid;
 	logic regfile_we;
+	logic csr_we;
 } pipeline_id_ctrl_t;
 
 typedef struct packed {
@@ -293,7 +297,6 @@ typedef struct packed {
 } pipeline_mem_ctrl_t;
 
 typedef struct packed {
-	logic csr_we;
 	regfile_in_sel_t regfile_in_sel;
 } pipeline_wb_ctrl_t;
 

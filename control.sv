@@ -17,9 +17,9 @@ module control(
 	logic wb_data_hazard;
 	logic data_hazard;
 
-	assign ex_data_hazard = id_ex_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, id_ex_reg_i.instr);
-	assign mem_data_hazard = ex_mem_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, ex_mem_reg_i.instr);
-	assign wb_data_hazard = mem_wb_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, mem_wb_reg_i.instr);
+	assign ex_data_hazard = id_ex_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, id_ex_reg_i.regfile_rd);
+	assign mem_data_hazard = ex_mem_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, ex_mem_reg_i.regfile_rd);
+	assign wb_data_hazard = mem_wb_reg_i.valid && data_hazard_raw_check(if_id_reg_i.instr, mem_wb_reg_i.regfile_rd);
 	assign data_hazard = ex_data_hazard || mem_data_hazard || wb_data_hazard;
 
 	/* IF stage */
@@ -56,6 +56,47 @@ module control(
 
 	/* ID stage */
 	assign id_ctrl_o.id_ex_reg_valid = if_id_reg_i.valid && !data_hazard && !control_hazard;
+
+	always_comb begin
+		id_ctrl_o.regfile_we = 0;
+
+		priority case (if_id_reg_i.instr.common.opcode)
+		OPCODE_LUI: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_AUIPC: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_JAL: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_JALR: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_LOAD: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_OP_IMM: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_OP: begin
+			id_ctrl_o.regfile_we = 1;
+		end
+		OPCODE_SYSTEM: begin
+			priority case (if_id_reg_i.instr.itype.funct3)
+			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
+			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
+			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
+				id_ctrl_o.regfile_we = 1;
+			end
+			endcase
+		end
+		endcase
+
+		if (!if_id_reg_i.valid) begin
+			id_ctrl_o.regfile_we = 0;
+		end
+	end
 
 	/* EX stage */
 	assign ex_ctrl_o.ex_mem_reg_valid = id_ex_reg_i.valid && !control_hazard;
@@ -239,29 +280,22 @@ module control(
 
 	/* WB stage */
 	always_comb begin
-		wb_ctrl_o.regfile_we = 0;
 		wb_ctrl_o.csr_we = 0;
 
 		priority case (mem_wb_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
 		OPCODE_AUIPC: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
 		OPCODE_JAL: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_PC_4;
 		end
 		OPCODE_JALR: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_PC_4;
 		end
 		OPCODE_LOAD: begin
-			wb_ctrl_o.regfile_we = 1;
-
 			priority case (mem_wb_reg_i.instr.itype.funct3)
 			FUNCT3_LOAD_LB:
 				wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_MEM_RD_SEXT8;
@@ -272,11 +306,9 @@ module control(
 			endcase
 		end
 		OPCODE_OP_IMM: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
 		OPCODE_OP: begin
-			wb_ctrl_o.regfile_we = 1;
 			wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_ALU_OUT;
 		end
 		OPCODE_SYSTEM: begin
@@ -284,7 +316,6 @@ module control(
 			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
 			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
 			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
-				wb_ctrl_o.regfile_we = 1;
 				wb_ctrl_o.csr_we = 1;
 				wb_ctrl_o.regfile_in_sel = REGFILE_IN_SEL_CSR_OUT;
 			end
@@ -293,7 +324,6 @@ module control(
 		endcase
 
 		if (!mem_wb_reg_i.valid) begin
-			wb_ctrl_o.regfile_we = 0;
 			wb_ctrl_o.csr_we = 0;
 		end
 	end

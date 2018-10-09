@@ -57,16 +57,19 @@ module control(
 	/* ID stage */
 	logic decode_regfile_we;
 	logic decode_csr_we;
+	alu_op_t decode_alu_op;
 
 	decode decode(
 		.instr_i(id_reg_i.instr),
 		.regfile_we_o(decode_regfile_we),
-		.csr_we_o(decode_csr_we)
+		.csr_we_o(decode_csr_we),
+		.alu_op_o(decode_alu_op)
 	);
 
 	assign id_ctrl_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
 	assign id_ctrl_o.regfile_we = id_reg_i.valid ? decode_regfile_we : 0;
 	assign id_ctrl_o.csr_we = id_reg_i.valid ? decode_csr_we : 0;
+	assign id_ctrl_o.alu_op = decode_alu_op;
 
 	/* EX stage */
 	assign ex_ctrl_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
@@ -74,26 +77,21 @@ module control(
 	always_comb begin
 		priority case (ex_reg_i.instr.common.opcode)
 		OPCODE_LUI: begin
-			ex_ctrl_o.alu_op = ALU_OP_IN2_PASSTHROUGH;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_AUIPC: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_PC;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_JAL: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_PC;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_JALR: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_BRANCH: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_PC;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 
@@ -113,100 +111,44 @@ module control(
 			endcase
 		end
 		OPCODE_LOAD: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_STORE: begin
-			ex_ctrl_o.alu_op = ALU_OP_ADD;
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 		end
 		OPCODE_OP_IMM: begin
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
-
-			priority case (ex_reg_i.instr.itype.funct3)
-			FUNCT3_OP_IMM_ADDI:
-				ex_ctrl_o.alu_op = ALU_OP_ADD;
-			FUNCT3_OP_IMM_SLTI:
-				ex_ctrl_o.alu_op = ALU_OP_SLT;
-			FUNCT3_OP_IMM_SLTIU:
-				ex_ctrl_o.alu_op = ALU_OP_SLTU;
-			FUNCT3_OP_IMM_XORI:
-				ex_ctrl_o.alu_op = ALU_OP_XOR;
-			FUNCT3_OP_IMM_ORI:
-				ex_ctrl_o.alu_op = ALU_OP_OR;
-			FUNCT3_OP_IMM_ANDI:
-				ex_ctrl_o.alu_op = ALU_OP_AND;
-			FUNCT3_OP_IMM_SLLI:
-				ex_ctrl_o.alu_op = ALU_OP_SLL;
-			FUNCT3_OP_IMM_SRI:
-				if (ex_reg_i.instr.itype.imm[10] == 0)
-					ex_ctrl_o.alu_op = ALU_OP_SRL;
-				else
-					ex_ctrl_o.alu_op = ALU_OP_SRA;
-			endcase
 		end
 		OPCODE_OP: begin
 			ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_REGFILE_OUT2;
-
-			priority case (ex_reg_i.instr.rtype.funct3)
-			FUNCT3_OP_ADD_SUB: begin
-				if (ex_reg_i.instr.rtype.funct7[5] == 0)
-					ex_ctrl_o.alu_op = ALU_OP_ADD;
-				else
-					ex_ctrl_o.alu_op = ALU_OP_SUB;
-			end
-			FUNCT3_OP_SLL:
-				ex_ctrl_o.alu_op = ALU_OP_SLL;
-			FUNCT3_OP_SLT:
-				ex_ctrl_o.alu_op = ALU_OP_SLT;
-			FUNCT3_OP_SLTU:
-				ex_ctrl_o.alu_op = ALU_OP_SLTU;
-			FUNCT3_OP_XOR:
-				ex_ctrl_o.alu_op = ALU_OP_XOR;
-			FUNCT3_OP_SR:
-				if (ex_reg_i.instr.rtype.funct7[5] == 0)
-					ex_ctrl_o.alu_op = ALU_OP_SRL;
-				else
-					ex_ctrl_o.alu_op = ALU_OP_SRA;
-			FUNCT3_OP_OR:
-				ex_ctrl_o.alu_op = ALU_OP_OR;
-			FUNCT3_OP_AND:
-				ex_ctrl_o.alu_op = ALU_OP_AND;
-			endcase
 		end
 		OPCODE_SYSTEM: begin
 			priority case (ex_reg_i.instr.itype.funct3)
 			FUNCT3_SYSTEM_CSRRW: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
-				ex_ctrl_o.alu_op = ALU_OP_IN1_PASSTHROUGH;
 			end
 			FUNCT3_SYSTEM_CSRRS: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 				ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_CSR_OUT;
-				ex_ctrl_o.alu_op = ALU_OP_OR;
 			end
 			FUNCT3_SYSTEM_CSRRC: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 				ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_CSR_OUT;
-				ex_ctrl_o.alu_op = ALU_OP_XOR;
 			end
 			FUNCT3_SYSTEM_CSRRWI: begin
 				ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
-				ex_ctrl_o.alu_op = ALU_OP_IN2_PASSTHROUGH;
 			end
 			FUNCT3_SYSTEM_CSRRSI: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_CSR_OUT;
 				ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
-				ex_ctrl_o.alu_op = ALU_OP_OR;
 			end
 			FUNCT3_SYSTEM_CSRRCI: begin
 				ex_ctrl_o.alu_in1_sel = ALU_IN1_SEL_CSR_OUT;
 				ex_ctrl_o.alu_in2_sel = ALU_IN2_SEL_IMM;
-				ex_ctrl_o.alu_op = ALU_OP_XOR;
 			end
 			endcase
 		end

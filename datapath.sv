@@ -81,6 +81,7 @@ module datapath(
 	assign next_ex_reg.regfile_rd = id_reg.instr.common.rd;
 	assign next_ex_reg.regfile_we = id_ctrl.regfile_we;
 	assign next_ex_reg.csr_we = id_ctrl.csr_we;
+	assign next_ex_reg.alu_op = id_ctrl.alu_op;
 	assign next_ex_reg.valid = id_ctrl.ex_reg_valid;
 
 	regfile regfile(
@@ -147,7 +148,7 @@ module datapath(
 	end
 
 	alu alu(
-		.alu_op_i(ex_ctrl.alu_op),
+		.alu_op_i(ex_reg.alu_op),
 		.in1_i(alu_in1),
 		.in2_i(alu_in2),
 		.out_o(next_mem_reg.alu_out)

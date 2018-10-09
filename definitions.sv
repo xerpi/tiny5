@@ -238,6 +238,7 @@ typedef struct packed {
 	logic [4:0] regfile_rd;
 	logic regfile_we;
 	logic csr_we;
+	alu_op_t alu_op;
 	logic valid;
 } pipeline_ex_reg_t;
 
@@ -280,10 +281,10 @@ typedef struct packed {
 	logic ex_reg_valid;
 	logic regfile_we;
 	logic csr_we;
+	alu_op_t alu_op;
 } pipeline_id_ctrl_t;
 
 typedef struct packed {
-	alu_op_t alu_op;
 	alu_in1_sel_t alu_in1_sel;
 	alu_in2_sel_t alu_in2_sel;
 	compare_unit_op_t compare_unit_op;

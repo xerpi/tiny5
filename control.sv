@@ -55,51 +55,18 @@ module control(
 	assign if_ctrl_o.id_reg_valid = !control_hazard;
 
 	/* ID stage */
+	logic decode_regfile_we;
+	logic decode_csr_we;
+
+	decode decode(
+		.instr_i(id_reg_i.instr),
+		.regfile_we_o(decode_regfile_we),
+		.csr_we_o(decode_csr_we)
+	);
+
 	assign id_ctrl_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
-
-	always_comb begin
-		id_ctrl_o.regfile_we = 0;
-		id_ctrl_o.csr_we = 0;
-
-		priority case (id_reg_i.instr.common.opcode)
-		OPCODE_LUI: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_AUIPC: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_JAL: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_JALR: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_LOAD: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_OP_IMM: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_OP: begin
-			id_ctrl_o.regfile_we = 1;
-		end
-		OPCODE_SYSTEM: begin
-			priority case (id_reg_i.instr.itype.funct3)
-			FUNCT3_SYSTEM_CSRRW, FUNCT3_SYSTEM_CSRRS,
-			FUNCT3_SYSTEM_CSRRC, FUNCT3_SYSTEM_CSRRWI,
-			FUNCT3_SYSTEM_CSRRSI, FUNCT3_SYSTEM_CSRRCI: begin
-				id_ctrl_o.regfile_we = 1;
-				id_ctrl_o.csr_we = 1;
-			end
-			endcase
-		end
-		endcase
-
-		if (!id_reg_i.valid) begin
-			id_ctrl_o.regfile_we = 0;
-			id_ctrl_o.csr_we = 0;
-		end
-	end
+	assign id_ctrl_o.regfile_we = id_reg_i.valid ? decode_regfile_we : 0;
+	assign id_ctrl_o.csr_we = id_reg_i.valid ? decode_csr_we : 0;
 
 	/* EX stage */
 	assign ex_ctrl_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;

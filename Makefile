@@ -5,7 +5,7 @@ MODELSIM_TOP_MODULE = top_simple_mem
 TRACE_FILE = trace.fst
 
 COMMON_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
-	datapath.sv mem_if.sv regfile.sv csr.sv immediate.sv
+	datapath.sv decode.sv mem_if.sv regfile.sv csr.sv immediate.sv
 
 VERILATOR_SOURCES = $(COMMON_SOURCES) top_dpi_mem.sv dpi_mem.sv
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp

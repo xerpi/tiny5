@@ -86,6 +86,7 @@ module datapath(
 		.wr_addr_i(wb_reg.csr_wr_addr),
 		.wr_data_i(wb_reg.alu_out),
 		.wr_en_i(wb_reg.csr_we && wb_reg.valid),
+		.instret_i(wb_reg.valid),
 		.rd_data_o(next_ex_reg.csr_out)
 	);
 

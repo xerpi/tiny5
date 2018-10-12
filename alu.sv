@@ -10,8 +10,6 @@ module alu(
 		priority case (alu_op_i)
 		ALU_OP_IN1_PASSTHROUGH:
 			out_o = in1_i;
-		ALU_OP_IN2_PASSTHROUGH:
-			out_o = in2_i;
 		ALU_OP_ADD:
 			out_o = in1_i + in2_i;
 		ALU_OP_SUB:

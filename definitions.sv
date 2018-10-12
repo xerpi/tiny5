@@ -162,37 +162,8 @@ typedef enum logic [11:0] {
 
 /* tiny5 definitions */
 
-/* Multiplexer select */
-
-typedef enum logic {
-	NEXT_PC_SEL_PC_4,
-	NEXT_PC_SEL_ALU_OUT
-} next_pc_sel_t;
-
-typedef enum logic [2:0] {
-	REGFILE_IN_SEL_ALU_OUT,
-	REGFILE_IN_SEL_PC_4,
-	REGFILE_IN_SEL_MEM_RD,
-	REGFILE_IN_SEL_MEM_RD_SEXT8,
-	REGFILE_IN_SEL_MEM_RD_SEXT16,
-	REGFILE_IN_SEL_CSR_OUT
-} regfile_in_sel_t;
-
-typedef enum logic [1:0] {
-	ALU_IN1_SEL_REGFILE_OUT1,
-	ALU_IN1_SEL_PC,
-	ALU_IN1_SEL_CSR_OUT
-} alu_in1_sel_t;
-
-typedef enum logic [1:0] {
-	ALU_IN2_SEL_REGFILE_OUT2,
-	ALU_IN2_SEL_IMM,
-	ALU_IN2_SEL_CSR_OUT
-} alu_in2_sel_t;
-
 typedef enum logic [3:0] {
 	ALU_OP_IN1_PASSTHROUGH,
-	ALU_OP_IN2_PASSTHROUGH,
 	ALU_OP_ADD,
 	ALU_OP_SUB,
 	ALU_OP_SLL,
@@ -220,6 +191,32 @@ typedef enum logic [1:0] {
 	MEM_ACCESS_SIZE_WORD
 } mem_access_size_t;
 
+/* Multiplexer select */
+
+typedef enum logic {
+	NEXT_PC_SEL_PC_4,
+	NEXT_PC_SEL_ALU_OUT
+} next_pc_sel_t;
+
+typedef enum logic [1:0] {
+	REGFILE_WR_SEL_ALU_OUT,
+	REGFILE_WR_SEL_DMEM_RD_DATA,
+	REGFILE_WR_SEL_PC_4,
+	REGFILE_WR_SEL_CSR_OUT
+} regfile_wr_sel_t;
+
+typedef enum logic {
+	ALU_IN1_SEL_REGFILE_OUT1,
+	ALU_IN1_SEL_IMM
+} alu_in1_sel_t;
+
+typedef enum logic [1:0] {
+	ALU_IN2_SEL_REGFILE_OUT2,
+	ALU_IN2_SEL_IMM,
+	ALU_IN2_SEL_PC,
+	ALU_IN2_SEL_CSR_OUT
+} alu_in2_sel_t;
+
 /* Pipeline stage registers (IF - ID - EX - MEM - WB) */
 
 typedef struct packed {
@@ -230,76 +227,95 @@ typedef struct packed {
 
 typedef struct packed {
 	logic [31:0] pc;
-	instruction_t instr;
 	logic [31:0] imm;
 	logic [31:0] regfile_out1;
 	logic [31:0] regfile_out2;
 	logic [31:0] csr_out;
-	logic [4:0] regfile_rd;
+	logic [4:0] regfile_wr_addr;
+	logic [11:0] csr_wr_addr;
 	logic regfile_we;
 	logic csr_we;
 	alu_op_t alu_op;
+	alu_in1_sel_t alu_in1_sel;
+	alu_in2_sel_t alu_in2_sel;
+	compare_unit_op_t compare_unit_op;
+	regfile_wr_sel_t regfile_wr_sel;
+	mem_access_size_t dmem_rd_size;
+	mem_access_size_t dmem_wr_size;
+	logic dmem_wr_enable;
+	logic dmem_rd_signed;
+	logic is_branch;
+	logic is_jump;
+	logic is_ecall;
 	logic valid;
 } pipeline_ex_reg_t;
 
 typedef struct packed {
 	logic [31:0] pc;
-	instruction_t instr;
 	logic [31:0] regfile_out2;
 	logic [31:0] csr_out;
-	logic [31:0] alu_out;
-	logic cmp_unit_res;
-	logic [4:0] regfile_rd;
+	logic [4:0] regfile_wr_addr;
+	logic [11:0] csr_wr_addr;
 	logic regfile_we;
 	logic csr_we;
+	logic [31:0] alu_out;
+	logic cmp_unit_res;
+	regfile_wr_sel_t regfile_wr_sel;
+	mem_access_size_t dmem_rd_size;
+	mem_access_size_t dmem_wr_size;
+	logic dmem_wr_enable;
+	logic dmem_rd_signed;
+	logic is_branch;
+	logic is_jump;
+	logic is_ecall;
 	logic valid;
 } pipeline_mem_reg_t;
 
 typedef struct packed {
 	logic [31:0] pc;
-	instruction_t instr;
 	logic [31:0] csr_out;
-	logic [31:0] alu_out;
-	logic [31:0] dmem_rd_data;
-	logic [4:0] regfile_rd;
+	logic [4:0] regfile_wr_addr;
+	logic [11:0] csr_wr_addr;
 	logic regfile_we;
 	logic csr_we;
+	logic [31:0] alu_out;
+	regfile_wr_sel_t regfile_wr_sel;
+	logic [31:0] dmem_rd_data;
+	logic is_ecall;
 	logic valid;
 } pipeline_wb_reg_t;
 
-/* Pipeline per-stage control signals */
+/* Pipeline decode and control signals */
 
 typedef struct packed {
-	logic pc_we;
+	logic regfile_we;
+	logic csr_we;
+	alu_op_t alu_op;
+	alu_in1_sel_t alu_in1_sel;
+	alu_in2_sel_t alu_in2_sel;
+	compare_unit_op_t compare_unit_op;
+	regfile_wr_sel_t regfile_wr_sel;
+	mem_access_size_t dmem_rd_size;
+	mem_access_size_t dmem_wr_size;
+	logic dmem_wr_enable;
+	logic dmem_rd_signed;
+	logic is_branch;
+	logic is_jump;
+	logic is_ecall;
+} decode_out_t;
+
+typedef struct packed {
+	/* IF stage */
 	next_pc_sel_t next_pc_sel;
 	logic pc_reg_stall;
 	logic id_reg_stall;
 	logic id_reg_valid;
-} pipeline_if_ctrl_t;
-
-typedef struct packed {
+	/* ID stage */
+	decode_out_t decode_out;
 	logic ex_reg_valid;
-	logic regfile_we;
-	logic csr_we;
-	alu_op_t alu_op;
-} pipeline_id_ctrl_t;
-
-typedef struct packed {
-	alu_in1_sel_t alu_in1_sel;
-	alu_in2_sel_t alu_in2_sel;
-	compare_unit_op_t compare_unit_op;
+	/* EX stage */
 	logic mem_reg_valid;
-} pipeline_ex_ctrl_t;
-
-typedef struct packed {
-	mem_access_size_t dmem_rd_size;
-	mem_access_size_t dmem_wr_size;
-	logic dmem_wr_enable;
-} pipeline_mem_ctrl_t;
-
-typedef struct packed {
-	regfile_in_sel_t regfile_in_sel;
-} pipeline_wb_ctrl_t;
+} pipeline_control_t;
 
 /* Helper functions */
 

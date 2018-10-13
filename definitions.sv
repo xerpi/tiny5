@@ -304,6 +304,13 @@ typedef struct packed {
 	logic is_ecall;
 } decode_out_t;
 
+typedef enum logic [1:0] {
+	ALU_OUT_BYPASS_FROM_NONE,
+	ALU_OUT_BYPASS_FROM_EX,
+	ALU_OUT_BYPASS_FROM_MEM,
+	ALU_OUT_BYPASS_FROM_WB
+} alu_out_bypass_from_t;
+
 typedef struct packed {
 	/* IF stage */
 	next_pc_sel_t next_pc_sel;
@@ -312,6 +319,8 @@ typedef struct packed {
 	logic id_reg_valid;
 	/* ID stage */
 	decode_out_t decode_out;
+	alu_out_bypass_from_t alu_out_to_reg1_bypass;
+	alu_out_bypass_from_t alu_out_to_reg2_bypass;
 	logic ex_reg_valid;
 	/* EX stage */
 	logic mem_reg_valid;
@@ -354,40 +363,17 @@ function instruction_reads_from_regfile_rs2(input instruction_t instr);
 	endcase
 endfunction
 
-function instruction_writes_to_regfile(input instruction_t instr);
-	case (instr.common.opcode)
-	OPCODE_LUI,
-	OPCODE_AUIPC,
-	OPCODE_JAL,
-	OPCODE_JALR,
-	OPCODE_LOAD,
-	OPCODE_OP_IMM,
-	OPCODE_OP:
-		return 1;
-	OPCODE_SYSTEM: begin
-		case (instr.itype.funct3)
-		FUNCT3_SYSTEM_CSRRW,
-		FUNCT3_SYSTEM_CSRRS,
-		FUNCT3_SYSTEM_CSRRC,
-		FUNCT3_SYSTEM_CSRRWI,
-		FUNCT3_SYSTEM_CSRRSI,
-		FUNCT3_SYSTEM_CSRRCI:
-			return 1;
-		default:
-			return 0;
-		endcase
-	end
-	default:
-		return 0;
-	endcase
-endfunction
-
 function data_hazard_raw_check(input instruction_t instr_read, input logic [4:0] write_rd);
 	return (write_rd != 0) &&
 		((instruction_reads_from_regfile_rs1(instr_read) &&
 			(instr_read.common.rs1 == write_rd)) ||
 		(instruction_reads_from_regfile_rs2(instr_read) &&
 			(instr_read.common.rs2 == write_rd)));
+endfunction
+
+function stage_will_write_alu_to_regfile(input logic rf_we, input logic [4:0] rf_wr_addr,
+					 input regfile_wr_sel_t rf_wr_sel);
+	return rf_we && (rf_wr_addr != 0) && (rf_wr_sel == REGFILE_WR_SEL_ALU_OUT);
 endfunction
 
 endpackage

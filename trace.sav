@@ -1,20 +1,21 @@
 [*]
-[*] GTKWave Analyzer v3.3.94 (w)1999-2018 BSI
-[*] Sat Oct  6 15:14:21 2018
+[*] GTKWave Analyzer v3.3.96 (w)1999-2018 BSI
+[*] Sat Oct 13 07:33:27 2018
 [*]
 [dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.fst"
-[dumpfile_mtime] "Sat Oct  6 15:13:39 2018"
-[dumpfile_size] 40832
+[dumpfile_mtime] "Sat Oct 13 07:23:41 2018"
+[dumpfile_size] 65676
 [savefile] "/home/xerpi/Desktop/tiny5/tiny5/trace.sav"
-[timestart] 15
+[timestart] 0
 [size] 1920 1025
 [pos] -1 -1
-*-2.000000 26 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.000000 6 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top_dpi_mem.
 [treeopen] TOP.top_dpi_mem.dp.
+[treeopen] TOP.top_dpi_mem.dp.control_unit.
 [treeopen] TOP.top_dpi_mem.dp.regfile.
-[sst_width] 222
+[sst_width] 325
 [signals_width] 519
 [sst_expanded] 1
 [sst_vpaned_height] 292
@@ -25,18 +26,16 @@ TOP.top_dpi_mem.clk_i
 -Pipeline registers
 @22
 TOP.top_dpi_mem.dp.pc[31:0]
-TOP.top_dpi_mem.dp.id_ex_reg[192:0]
-TOP.top_dpi_mem.dp.ex_mem_reg[161:0]
 @1000200
 -Pipeline registers
 @800200
 -Hazards
 @28
-TOP.top_dpi_mem.dp.control.ex_data_hazard
-TOP.top_dpi_mem.dp.control.mem_data_hazard
-TOP.top_dpi_mem.dp.control.wb_data_hazard
-TOP.top_dpi_mem.dp.control.data_hazard
-TOP.top_dpi_mem.dp.control.control_hazard
+TOP.top_dpi_mem.dp.control_unit.ex_data_hazard
+TOP.top_dpi_mem.dp.control_unit.mem_data_hazard
+TOP.top_dpi_mem.dp.control_unit.wb_data_hazard
+TOP.top_dpi_mem.dp.control_unit.data_hazard
+TOP.top_dpi_mem.dp.control_unit.control_hazard
 @1000200
 -Hazards
 @22
@@ -51,12 +50,21 @@ TOP.top_dpi_mem.dp.regfile.registers(4)[31:0]
 TOP.top_dpi_mem.dp.regfile.registers(5)[31:0]
 TOP.top_dpi_mem.dp.regfile.registers(6)[31:0]
 TOP.top_dpi_mem.dp.regfile.registers(29)[31:0]
-@23
 TOP.top_dpi_mem.dp.regfile.registers(30)[31:0]
 @1000200
 -Registers
 @22
 TOP.top_dpi_mem.dmemif.rd_addr[31:0]
 TOP.top_dpi_mem.dmemif.rd_data[31:0]
+@800200
+-Bypasses
+@29
+TOP.top_dpi_mem.dp.control_unit.ex_alu_out_to_reg1_bypass
+@1000200
+-Bypasses
+@22
+TOP.top_dpi_mem.dp.csr.reg_cycle[63:0]
+TOP.top_dpi_mem.dp.csr.reg_instret[63:0]
+TOP.top_dpi_mem.dp.csr.reg_time[63:0]
 [pattern_trace] 1
 [pattern_trace] 0

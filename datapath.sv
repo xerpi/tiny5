@@ -25,6 +25,7 @@ module datapath(
 
 	/* Inter-stage signals */
 	logic [31:0] wb_regfile_wr_data;
+	logic [31:0] ex_alu_out;
 
 	/* Control unit */
 	control control_unit(
@@ -68,6 +69,9 @@ module datapath(
 			id_reg <= control.id_reg_stall ? id_reg : next_id_reg;
 	end
 
+	logic [31:0] id_regfile_out1;
+	logic [31:0] id_regfile_out2;
+
 	regfile regfile(
 		.clk_i(clk_i),
 		.rd_addr1_i(id_reg.instr.common.rs1),
@@ -75,8 +79,8 @@ module datapath(
 		.wr_addr_i(wb_reg.regfile_wr_addr),
 		.wr_data_i(wb_regfile_wr_data),
 		.wr_en_i(wb_reg.regfile_we && wb_reg.valid),
-		.rd_data1_o(next_ex_reg.regfile_out1),
-		.rd_data2_o(next_ex_reg.regfile_out2)
+		.rd_data1_o(id_regfile_out1),
+		.rd_data2_o(id_regfile_out2)
 	);
 
 	csr csr(
@@ -96,6 +100,33 @@ module datapath(
 	);
 
 	assign next_ex_reg.pc = id_reg.pc;
+
+	always_comb begin
+		priority case (control.alu_out_to_reg1_bypass)
+		ALU_OUT_BYPASS_FROM_NONE:
+			next_ex_reg.regfile_out1 = id_regfile_out1;
+		ALU_OUT_BYPASS_FROM_EX:
+			next_ex_reg.regfile_out1 = ex_alu_out;
+		ALU_OUT_BYPASS_FROM_MEM:
+			next_ex_reg.regfile_out1 = mem_reg.alu_out;
+		ALU_OUT_BYPASS_FROM_WB:
+			next_ex_reg.regfile_out1 = wb_reg.alu_out;
+		endcase
+	end
+
+	always_comb begin
+		priority case (control.alu_out_to_reg2_bypass)
+		ALU_OUT_BYPASS_FROM_NONE:
+			next_ex_reg.regfile_out2 = id_regfile_out2;
+		ALU_OUT_BYPASS_FROM_EX:
+			next_ex_reg.regfile_out2 = ex_alu_out;
+		ALU_OUT_BYPASS_FROM_MEM:
+			next_ex_reg.regfile_out2 = mem_reg.alu_out;
+		ALU_OUT_BYPASS_FROM_WB:
+			next_ex_reg.regfile_out2 = wb_reg.alu_out;
+		endcase
+	end
+
 	assign next_ex_reg.regfile_wr_addr = id_reg.instr.common.rd;
 	assign next_ex_reg.csr_wr_addr = id_reg.instr.itype.imm;
 	assign next_ex_reg.regfile_we = control.decode_out.regfile_we;
@@ -149,7 +180,7 @@ module datapath(
 		.alu_op_i(ex_reg.alu_op),
 		.in1_i(ex_alu_in1),
 		.in2_i(ex_alu_in2),
-		.out_o(next_mem_reg.alu_out)
+		.out_o(ex_alu_out)
 	);
 
 	compare_unit cmp_unit(
@@ -166,6 +197,7 @@ module datapath(
 	assign next_mem_reg.csr_wr_addr = ex_reg.csr_wr_addr;
 	assign next_mem_reg.regfile_we = ex_reg.regfile_we;
 	assign next_mem_reg.csr_we = ex_reg.csr_we;
+	assign next_mem_reg.alu_out = ex_alu_out;
 	assign next_mem_reg.regfile_wr_sel = ex_reg.regfile_wr_sel;
 	assign next_mem_reg.dmem_rd_size = ex_reg.dmem_rd_size;
 	assign next_mem_reg.dmem_wr_size = ex_reg.dmem_wr_size;

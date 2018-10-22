@@ -39,7 +39,7 @@ module immediate(
 	};
 
 	always_comb begin
-		priority case (instr.common.opcode)
+		case (instr.common.opcode)
 		OPCODE_LUI, OPCODE_AUIPC:
 			imm_o = utype_imm;
 		OPCODE_JAL:
@@ -58,6 +58,8 @@ module immediate(
 				imm_o = csr_uimm;
 			endcase
 		end
+		default:
+			imm_o = 0;
 		endcase
 	end
 endmodule

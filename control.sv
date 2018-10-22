@@ -13,9 +13,12 @@ module control(
 	logic wb_data_hazard;
 	logic data_hazard;
 
-	assign ex_data_hazard = ex_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, ex_reg_i.regfile_wr_addr);
-	assign mem_data_hazard = mem_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, mem_reg_i.regfile_wr_addr);
-	assign wb_data_hazard = wb_reg_i.valid && data_hazard_raw_check(id_reg_i.instr, wb_reg_i.regfile_wr_addr);
+	assign ex_data_hazard = ex_reg_i.valid && ex_reg_i.regfile_we &&
+		data_hazard_raw_check(id_reg_i.instr, ex_reg_i.regfile_wr_addr);
+	assign mem_data_hazard = mem_reg_i.valid && mem_reg_i.regfile_we &&
+		data_hazard_raw_check(id_reg_i.instr, mem_reg_i.regfile_wr_addr);
+	assign wb_data_hazard = wb_reg_i.valid && wb_reg_i.regfile_we &&
+		data_hazard_raw_check(id_reg_i.instr, wb_reg_i.regfile_wr_addr);
 
 	/* Bypass/forwarding */
 	logic ex_alu_writes_regfile;

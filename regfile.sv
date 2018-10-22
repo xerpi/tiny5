@@ -1,5 +1,6 @@
 module regfile(
 	input logic clk_i,
+	input logic reset_i,
 	input logic [4:0] rd_addr1_i,
 	input logic [4:0] rd_addr2_i,
 	input logic [4:0] wr_addr_i,
@@ -14,7 +15,10 @@ module regfile(
 	assign rd_data2_o = (rd_addr2_i > 0) ? registers[rd_addr2_i] : 'b0;
 
 	always_ff @(posedge clk_i) begin
-		if (wr_en_i && wr_addr_i > 0) begin
+		if (reset_i) begin
+			for (integer i = 1; i < 32; i++)
+				registers[i] <= 0;
+		end else if (wr_en_i && wr_addr_i > 0) begin
 			registers[wr_addr_i] <= wr_data_i;
 		end
 	end

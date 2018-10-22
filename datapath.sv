@@ -74,6 +74,7 @@ module datapath(
 
 	regfile regfile(
 		.clk_i(clk_i),
+		.reset_i(reset_i),
 		.rd_addr1_i(id_reg.instr.common.rs1),
 		.rd_addr2_i(id_reg.instr.common.rs2),
 		.wr_addr_i(wb_reg.regfile_wr_addr),

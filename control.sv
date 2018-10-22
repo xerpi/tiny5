@@ -21,9 +21,6 @@ module control(
 		data_hazard_raw_check(id_reg_i.instr, wb_reg_i.regfile_wr_addr);
 
 	/* Bypass/forwarding */
-	logic ex_alu_writes_regfile;
-	logic mem_alu_writes_regfile;
-	logic wb_alu_writes_regfile;
 	logic ex_alu_out_to_reg1_bypass;
 	logic ex_alu_out_to_reg2_bypass;
 	logic mem_alu_out_to_reg1_bypass;
@@ -31,38 +28,18 @@ module control(
 	logic wb_alu_out_to_reg1_bypass;
 	logic wb_alu_out_to_reg2_bypass;
 
-	assign ex_alu_writes_regfile = ex_reg_i.valid &&
-		stage_will_write_alu_to_regfile(ex_reg_i.regfile_we,
-						ex_reg_i.regfile_wr_addr,
-						ex_reg_i.regfile_wr_sel);
-
-	assign mem_alu_writes_regfile = mem_reg_i.valid &&
-		stage_will_write_alu_to_regfile(mem_reg_i.regfile_we,
-						mem_reg_i.regfile_wr_addr,
-						mem_reg_i.regfile_wr_sel);
-
-	assign wb_alu_writes_regfile = wb_reg_i.valid &&
-		stage_will_write_alu_to_regfile(wb_reg_i.regfile_we,
-						wb_reg_i.regfile_wr_addr,
-						wb_reg_i.regfile_wr_sel);
-
-	assign ex_alu_out_to_reg1_bypass = ex_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs1 == ex_reg_i.regfile_wr_addr);
-
-	assign ex_alu_out_to_reg2_bypass = ex_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs2 == ex_reg_i.regfile_wr_addr);
-
-	assign mem_alu_out_to_reg1_bypass = mem_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs1 == mem_reg_i.regfile_wr_addr);
-
-	assign mem_alu_out_to_reg2_bypass = mem_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs2 == mem_reg_i.regfile_wr_addr);
-
-	assign wb_alu_out_to_reg1_bypass = wb_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs1 == wb_reg_i.regfile_wr_addr);
-
-	assign wb_alu_out_to_reg2_bypass = wb_alu_writes_regfile &&
-		(id_reg_i.instr.common.rs2 == wb_reg_i.regfile_wr_addr);
+	forwarding forwarding(
+		.id_reg_i(id_reg_i),
+		.ex_reg_i(ex_reg_i),
+		.mem_reg_i(mem_reg_i),
+		.wb_reg_i(wb_reg_i),
+		.ex_alu_out_to_reg1_bypass_o(ex_alu_out_to_reg1_bypass),
+		.ex_alu_out_to_reg2_bypass_o(ex_alu_out_to_reg2_bypass),
+		.mem_alu_out_to_reg1_bypass_o(mem_alu_out_to_reg1_bypass),
+		.mem_alu_out_to_reg2_bypass_o(mem_alu_out_to_reg2_bypass),
+		.wb_alu_out_to_reg1_bypass_o(wb_alu_out_to_reg1_bypass),
+		.wb_alu_out_to_reg2_bypass_o(wb_alu_out_to_reg2_bypass)
+	);
 
 	assign data_hazard =
 		(ex_data_hazard && !(ex_alu_out_to_reg1_bypass || ex_alu_out_to_reg2_bypass)) ||

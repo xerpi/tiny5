@@ -17,7 +17,7 @@ module top_simple_mem(
 		.memif(dmemif)
 	);
 
-	datapath dp(
+	datapath datapath(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
 		.imemif(imemif),

@@ -70,38 +70,3 @@ void Tiny5Tb::advanceTimeStamp(void)
 
 	timeStamp++;
 }
-
-uint8_t Tiny5Tb::memRead8(uint32_t address)
-{
-	return mem[address];
-}
-
-void Tiny5Tb::memWrite8(uint32_t address, uint8_t data)
-{
-	mem[address] = data;
-}
-
-uint16_t Tiny5Tb::memRead16(uint32_t address)
-{
-	return (mem[address + 1] << 8) | mem[address];
-}
-
-void Tiny5Tb::memWrite16(uint32_t address, uint16_t data)
-{
-	mem[address] = data & 0xFF;
-	mem[address + 1] = (data >> 8) & 0xFF;
-}
-
-uint32_t Tiny5Tb::memRead32(uint32_t address)
-{
-	return (mem[address + 3] << 24) | (mem[address + 2] << 16) |
-		(mem[address + 1] << 8) | mem[address];
-}
-
-void Tiny5Tb::memWrite32(uint32_t address, uint32_t data)
-{
-	mem[address] = data & 0xFF;
-	mem[address + 1] = (data >> 8) & 0xFF;
-	mem[address + 2] = (data >> 16) & 0xFF;
-	mem[address + 3] = (data >> 24) & 0xFF;
-}

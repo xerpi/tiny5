@@ -1,18 +1,16 @@
 VERILATOR ?= verilator
 
-VERILATOR_TOP_MODULE = top_dpi_mem
-MODELSIM_TOP_MODULE = top_simple_mem
+TOP_MODULE = top
 TRACE_FILE = trace.fst
 
-COMMON_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
-	datapath.sv decode.sv forwarding.sv mem_if.sv regfile.sv csr.sv immediate.sv
+VERILOG_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
+	datapath.sv decode.sv forwarding.sv mem_if.sv regfile.sv csr.sv \
+	immediate.sv memory.sv top.sv
 
-VERILATOR_SOURCES = $(COMMON_SOURCES) top_dpi_mem.sv dpi_mem.sv
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
-MODELSIM_SOURCES = $(COMMON_SOURCES) simple_mem.sv top_simple_mem.sv
 TEST_SOURCES = test/start.s
 
-VERILATOR_VTOP = V$(VERILATOR_TOP_MODULE)
+VERILATOR_VTOP = V$(TOP_MODULE)
 CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
 VERILATOR_FLAGS = -Wno-fatal -Wall -CFLAGS "$(CFLAGS)" --x-initial-edge
 TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
@@ -20,17 +18,18 @@ TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
 all: lint
 
 #### Verilator ####
-obj_dir/$(VERILATOR_VTOP): $(VERILATOR_SOURCES) $(VERILATOR_TB_SOURCES)
-	$(VERILATOR) $(VERILATOR_FLAGS) --trace-fst --cc --exe $^ --top-module $(VERILATOR_TOP_MODULE)
+obj_dir/$(VERILATOR_VTOP): $(VERILOG_SOURCES) $(VERILATOR_TB_SOURCES)
+	$(VERILATOR) $(VERILATOR_FLAGS) --trace-fst --cc --exe $^ --top-module $(TOP_MODULE)
 	make -j4 -k -C obj_dir -f $(VERILATOR_VTOP).mk $(VERILATOR_VTOP)
 
 verilate: obj_dir/$(VERILATOR_VTOP)
 
 lint:
-	@$(VERILATOR) -Wall -Wno-fatal --lint-only $(VERILATOR_SOURCES)
+	@$(VERILATOR) -Wall -Wno-fatal --lint-only $(VERILOG_SOURCES)
 
-run: obj_dir/$(VERILATOR_VTOP) test.bin
-	obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=test.bin $(ARGS)
+run: test.bin obj_dir/$(VERILATOR_VTOP)
+	@hexdump -ve '1/1 "%.2x "' $< > memory.hex.txt
+	@obj_dir/$(VERILATOR_VTOP) $(ARGS)
 
 $(TRACE_FILE): run
 
@@ -38,10 +37,11 @@ gtkwave: $(TRACE_FILE)
 	@gtkwave $(TRACE_FILE) trace.sav
 
 #### Modelsim ####
-modelsim: $(MODELSIM_SOURCES) test.hex.txt
+modelsim: test.bin $(VERILOG_SOURCES)
+	@hexdump -ve '1/1 "%.2x "' $< > memory.hex.txt
 	vlib work
-	vlog -ccflags "-std=c++11" $(MODELSIM_SOURCES)
-	vsim -do tb/modelsim.do $(MODELSIM_TOP_MODULE)
+	vlog -ccflags "-std=c++11" $(VERILOG_SOURCES)
+	vsim -do tb/modelsim.do $(TOP_MODULE)
 
 #### Test code ####
 test.elf: $(TEST_SOURCES)
@@ -64,7 +64,8 @@ riscv-tests-clean:
 		$(addsuffix .test.out, $(RISCV_TESTS_LST)) \
 
 %.test.out: %.bin obj_dir/$(VERILATOR_VTOP)
-	@obj_dir/$(VERILATOR_VTOP) -l addr=0x00010000,file=$^ > $@
+	@hexdump -ve '1/1 "%.2x "' $< > memory.hex.txt
+	@obj_dir/$(VERILATOR_VTOP) > $@
 	@cat $@
 
 %.elf: $(RISCV_TESTS_DIR)/isa/rv32ui/%.S
@@ -78,7 +79,7 @@ riscv-tests-clean:
 	@hexdump -ve '1/1 "%.2x "' $< > $@
 
 clean: riscv-tests-clean
-	@rm -rf obj_dir work $(TRACE_FILE) $(TRACE_FILE).hier test.elf test.bin test.hex.txt \
+	@rm -rf obj_dir work $(TRACE_FILE) $(TRACE_FILE).hier test.elf test.bin memory.hex.txt \
 		vsim.wlf transcript
 
 .PHONY:

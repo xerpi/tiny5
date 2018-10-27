@@ -1,18 +1,18 @@
 import definitions::*;
 
-module top_dpi_mem(
+module top(
 	input logic clk_i,
 	input logic reset_i
 );
 	mem_if imemif();
 	mem_if dmemif();
 
-	dpi_mem imem(
+	memory imem(
 		.clk_i(clk_i),
 		.memif(imemif)
 	);
 
-	dpi_mem dmem(
+	memory dmem(
 		.clk_i(clk_i),
 		.memif(dmemif)
 	);

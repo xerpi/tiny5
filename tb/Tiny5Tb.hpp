@@ -19,17 +19,9 @@ public:
 
 	uint64_t getTimeStamp(void);
 
-	uint8_t memRead8(uint32_t address);
-	void memWrite8(uint32_t address, uint8_t data);
-	uint16_t memRead16(uint32_t address);
-	void memWrite16(uint32_t address, uint16_t data);
-	uint32_t memRead32(uint32_t address);
-	void memWrite32(uint32_t address, uint32_t data);
-
 private:
 	VTOP_MODULE *top;
 	uint64_t timeStamp;
-	std::map<uint32_t, uint8_t> mem;
 	VerilatedFstC *fst;
 
 	void advanceTimeStamp(void);

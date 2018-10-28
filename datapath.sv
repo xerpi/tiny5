@@ -39,7 +39,7 @@ module datapath(
 	/* IF stage */
 	always_ff @(posedge clk_i) begin
 		if (reset_i)
-			pc <= 'h00010000;
+			pc <= 'h00001000;
 		else
 			pc <= control.pc_reg_stall ? pc : next_pc;
 	end

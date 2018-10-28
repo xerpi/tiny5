@@ -1,7 +1,7 @@
 import definitions::*;
 
 module memory #(
-	parameter START_ADDR = 'h00010000,
+	parameter START_ADDR = 'h00001000,
 	parameter MEM_SIZE = 64 * 1024
 ) (
 	input logic clk_i,

@@ -10,8 +10,10 @@ module memory #(
 	logic [7:0] data[MEM_SIZE:0];
 
 	logic [31:0] phys_rd_addr;
+	logic [31:0] phys_wr_addr;
 
 	assign phys_rd_addr = memif.rd_addr[$clog2(START_ADDR) - 1:0];
+	assign phys_wr_addr = memif.wr_addr[$clog2(START_ADDR) - 1:0];
 
 	always_comb begin
 		priority case (memif.rd_size)
@@ -29,16 +31,16 @@ module memory #(
 		if (memif.wr_enable) begin
 			priority case (memif.wr_size)
 			MEM_ACCESS_SIZE_BYTE:
-				data[memif.wr_addr] <= memif.wr_data[7:0];
+				data[phys_wr_addr] <= memif.wr_data[7:0];
 			MEM_ACCESS_SIZE_HALF: begin
-				data[memif.wr_addr] <= memif.wr_data[7:0];
-				data[memif.wr_addr + 1] <= memif.wr_data[15:8];
+				data[phys_wr_addr] <= memif.wr_data[7:0];
+				data[phys_wr_addr + 1] <= memif.wr_data[15:8];
 			end
 			MEM_ACCESS_SIZE_WORD: begin
-				data[memif.wr_addr] <= memif.wr_data[7:0];
-				data[memif.wr_addr + 1] <= memif.wr_data[15:8];
-				data[memif.wr_addr + 2] <= memif.wr_data[23:16];
-				data[memif.wr_addr + 3] <= memif.wr_data[31:24];
+				data[phys_wr_addr] <= memif.wr_data[7:0];
+				data[phys_wr_addr + 1] <= memif.wr_data[15:8];
+				data[phys_wr_addr + 2] <= memif.wr_data[23:16];
+				data[phys_wr_addr + 3] <= memif.wr_data[31:24];
 			end
 			endcase
 		end

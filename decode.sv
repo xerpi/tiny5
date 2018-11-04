@@ -7,8 +7,8 @@ module decode(
 	always_comb begin
 		decode_o.regfile_we = 0;
 		decode_o.csr_we = 0;
-		decode_o.dmem_wr_enable = 0;
-		decode_o.dmem_rd_signed = 0;
+		decode_o.dcache_wr_enable = 0;
+		decode_o.dcache_rd_signed = 0;
 		decode_o.is_branch = 0;
 		decode_o.is_jump = 0;
 		decode_o.is_ecall = 0;
@@ -73,31 +73,31 @@ module decode(
 
 			priority case (instr_i.itype.funct3)
 			FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
-				decode_o.dmem_rd_size = MEM_ACCESS_SIZE_BYTE;
+				decode_o.dcache_rd_size = CACHE_ACCESS_SIZE_BYTE;
 			FUNCT3_LOAD_LH, FUNCT3_LOAD_LHU:
-				decode_o.dmem_rd_size = MEM_ACCESS_SIZE_HALF;
+				decode_o.dcache_rd_size = CACHE_ACCESS_SIZE_HALF;
 			FUNCT3_LOAD_LW:
-				decode_o.dmem_rd_size = MEM_ACCESS_SIZE_WORD;
+				decode_o.dcache_rd_size = CACHE_ACCESS_SIZE_WORD;
 			endcase
 
 			priority case (instr_i.itype.funct3)
 			FUNCT3_LOAD_LB, FUNCT3_LOAD_LH, FUNCT3_LOAD_LW:
-				decode_o.dmem_rd_signed = 1;
+				decode_o.dcache_rd_signed = 1;
 			endcase
 		end
 		OPCODE_STORE: begin
-			decode_o.dmem_wr_enable = 1;
+			decode_o.dcache_wr_enable = 1;
 			decode_o.alu_op = ALU_OP_ADD;
 			decode_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			decode_o.alu_in2_sel = ALU_IN2_SEL_IMM;
 
 			priority case (instr_i.itype.funct3)
 			FUNCT3_STORE_SB:
-				decode_o.dmem_wr_size = MEM_ACCESS_SIZE_BYTE;
+				decode_o.dcache_wr_size = CACHE_ACCESS_SIZE_BYTE;
 			FUNCT3_STORE_SH:
-				decode_o.dmem_wr_size = MEM_ACCESS_SIZE_HALF;
+				decode_o.dcache_wr_size = CACHE_ACCESS_SIZE_HALF;
 			FUNCT3_STORE_SW:
-				decode_o.dmem_wr_size = MEM_ACCESS_SIZE_WORD;
+				decode_o.dcache_wr_size = CACHE_ACCESS_SIZE_WORD;
 			endcase
 		end
 		OPCODE_OP_IMM: begin

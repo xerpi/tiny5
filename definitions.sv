@@ -1,5 +1,7 @@
 package definitions;
 
+import cache_interface_types::*;
+
 /* RISC-V ISA definitions */
 
 typedef struct packed {
@@ -185,12 +187,6 @@ typedef enum logic [2:0] {
 	COMPARE_UNIT_OP_GEU
 } compare_unit_op_t;
 
-typedef enum logic [1:0] {
-	MEM_ACCESS_SIZE_BYTE,
-	MEM_ACCESS_SIZE_HALF,
-	MEM_ACCESS_SIZE_WORD
-} mem_access_size_t;
-
 /* Multiplexer select */
 
 typedef enum logic {
@@ -240,10 +236,10 @@ typedef struct packed {
 	alu_in2_sel_t alu_in2_sel;
 	compare_unit_op_t compare_unit_op;
 	regfile_wr_sel_t regfile_wr_sel;
-	mem_access_size_t dmem_rd_size;
-	mem_access_size_t dmem_wr_size;
-	logic dmem_wr_enable;
-	logic dmem_rd_signed;
+	cache_access_size_t dcache_rd_size;
+	cache_access_size_t dcache_wr_size;
+	logic dcache_wr_enable;
+	logic dcache_rd_signed;
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;
@@ -261,10 +257,10 @@ typedef struct packed {
 	logic [31:0] alu_out;
 	logic cmp_unit_res;
 	regfile_wr_sel_t regfile_wr_sel;
-	mem_access_size_t dmem_rd_size;
-	mem_access_size_t dmem_wr_size;
-	logic dmem_wr_enable;
-	logic dmem_rd_signed;
+	cache_access_size_t dcache_rd_size;
+	cache_access_size_t dcache_wr_size;
+	logic dcache_wr_enable;
+	logic dcache_rd_signed;
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;
@@ -280,7 +276,7 @@ typedef struct packed {
 	logic csr_we;
 	logic [31:0] alu_out;
 	regfile_wr_sel_t regfile_wr_sel;
-	logic [31:0] dmem_rd_data;
+	logic [31:0] dcache_rd_data;
 	logic is_ecall;
 	logic valid;
 } pipeline_wb_reg_t;
@@ -295,10 +291,10 @@ typedef struct packed {
 	alu_in2_sel_t alu_in2_sel;
 	compare_unit_op_t compare_unit_op;
 	regfile_wr_sel_t regfile_wr_sel;
-	mem_access_size_t dmem_rd_size;
-	mem_access_size_t dmem_wr_size;
-	logic dmem_wr_enable;
-	logic dmem_rd_signed;
+	cache_access_size_t dcache_rd_size;
+	cache_access_size_t dcache_wr_size;
+	logic dcache_wr_enable;
+	logic dcache_rd_signed;
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;

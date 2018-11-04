@@ -3,29 +3,29 @@ VERILATOR ?= verilator
 TOP_MODULE = top
 TRACE_FILE = trace.fst
 
-VERILOG_SOURCES = definitions.sv alu.sv compare_unit.sv control.sv \
-	datapath.sv decode.sv forwarding.sv mem_if.sv regfile.sv csr.sv \
-	immediate.sv memory.sv top.sv
+VERILOG_SOURCES = cache_interface_types.sv definitions.sv alu.sv compare_unit.sv \
+	control.sv datapath.sv decode.sv forwarding.sv regfile.sv csr.sv immediate.sv \
+	cache_interface.sv memory_interface.sv memory_arbiter.sv cache.sv memory.sv top.sv
 
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
 TEST_SOURCES = test/start.s
 
 VERILATOR_VTOP = V$(TOP_MODULE)
 CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
-VERILATOR_FLAGS = -Wno-fatal -Wall -CFLAGS "$(CFLAGS)" --x-initial-edge
+VERILATOR_FLAGS = -Wall -Wno-fatal --unroll-count 2048 --x-initial-edge --top-module $(TOP_MODULE)
 TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
 
 all: lint
 
 #### Verilator ####
 obj_dir/$(VERILATOR_VTOP): $(VERILOG_SOURCES) $(VERILATOR_TB_SOURCES)
-	$(VERILATOR) $(VERILATOR_FLAGS) --trace-fst --cc --exe $^ --top-module $(TOP_MODULE)
+	$(VERILATOR) $(VERILATOR_FLAGS) -CFLAGS "$(CFLAGS)" --trace-fst --cc --exe $^
 	make -j4 -k -C obj_dir -f $(VERILATOR_VTOP).mk $(VERILATOR_VTOP)
 
 verilate: obj_dir/$(VERILATOR_VTOP)
 
 lint:
-	@$(VERILATOR) -Wall -Wno-fatal --lint-only $(VERILOG_SOURCES)
+	@$(VERILATOR) $(VERILATOR_FLAGS) --lint-only $(VERILOG_SOURCES)
 
 run: test.bin obj_dir/$(VERILATOR_VTOP)
 	@hexdump -ve '1/1 "%.2x "' $< > memory.hex.txt
@@ -65,7 +65,7 @@ riscv-tests-clean:
 
 %.test.out: %.bin obj_dir/$(VERILATOR_VTOP)
 	@hexdump -ve '1/1 "%.2x "' $< > memory.hex.txt
-	@obj_dir/$(VERILATOR_VTOP) > $@
+	obj_dir/$(VERILATOR_VTOP) > $@
 	@cat $@
 
 %.elf: $(RISCV_TESTS_DIR)/isa/rv32ui/%.S

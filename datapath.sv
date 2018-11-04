@@ -1,10 +1,11 @@
 import definitions::*;
+import cache_interface_types::*;
 
 module datapath(
 	input logic clk_i,
 	input logic reset_i,
-	mem_if.slave imemif,
-	mem_if.slave dmemif
+	cache_interface.master icache_bus,
+	cache_interface.master dcache_bus
 );
 	/* Pipeline registers */
 	logic [31:0] pc;
@@ -44,9 +45,9 @@ module datapath(
 			pc <= control.pc_reg_stall ? pc : next_pc;
 	end
 
-	assign imemif.rd_addr = pc;
-	assign imemif.rd_size = MEM_ACCESS_SIZE_WORD;
-	assign imemif.wr_enable = 0;
+	assign icache_bus.addr = pc;
+	assign icache_bus.write = 0;
+	assign icache_bus.valid = !control.pc_reg_stall;
 
 	always_comb begin
 		priority case (control.next_pc_sel)
@@ -58,7 +59,7 @@ module datapath(
 	end
 
 	assign next_id_reg.pc = pc;
-	assign next_id_reg.instr = imemif.rd_data;
+	assign next_id_reg.instr = icache_bus.rd_data;
 	assign next_id_reg.valid = control.id_reg_valid;
 
 	/* ID stage */
@@ -137,10 +138,10 @@ module datapath(
 	assign next_ex_reg.alu_in2_sel = control.decode_out.alu_in2_sel;
 	assign next_ex_reg.compare_unit_op = control.decode_out.compare_unit_op;
 	assign next_ex_reg.regfile_wr_sel = control.decode_out.regfile_wr_sel;
-	assign next_ex_reg.dmem_rd_size = control.decode_out.dmem_rd_size;
-	assign next_ex_reg.dmem_wr_size = control.decode_out.dmem_wr_size;
-	assign next_ex_reg.dmem_wr_enable = control.decode_out.dmem_wr_enable;
-	assign next_ex_reg.dmem_rd_signed = control.decode_out.dmem_rd_signed;
+	assign next_ex_reg.dcache_rd_size = control.decode_out.dcache_rd_size;
+	assign next_ex_reg.dcache_wr_size = control.decode_out.dcache_wr_size;
+	assign next_ex_reg.dcache_wr_enable = control.decode_out.dcache_wr_enable;
+	assign next_ex_reg.dcache_rd_signed = control.decode_out.dcache_rd_signed;
 	assign next_ex_reg.is_branch = control.decode_out.is_branch;
 	assign next_ex_reg.is_jump = control.decode_out.is_jump;
 	assign next_ex_reg.is_ecall = control.decode_out.is_ecall;
@@ -200,10 +201,10 @@ module datapath(
 	assign next_mem_reg.csr_we = ex_reg.csr_we;
 	assign next_mem_reg.alu_out = ex_alu_out;
 	assign next_mem_reg.regfile_wr_sel = ex_reg.regfile_wr_sel;
-	assign next_mem_reg.dmem_rd_size = ex_reg.dmem_rd_size;
-	assign next_mem_reg.dmem_wr_size = ex_reg.dmem_wr_size;
-	assign next_mem_reg.dmem_wr_enable = ex_reg.dmem_wr_enable;
-	assign next_mem_reg.dmem_rd_signed = ex_reg.dmem_rd_signed;
+	assign next_mem_reg.dcache_rd_size = ex_reg.dcache_rd_size;
+	assign next_mem_reg.dcache_wr_size = ex_reg.dcache_wr_size;
+	assign next_mem_reg.dcache_wr_enable = ex_reg.dcache_wr_enable;
+	assign next_mem_reg.dcache_rd_signed = ex_reg.dcache_rd_signed;
 	assign next_mem_reg.is_branch = ex_reg.is_branch;
 	assign next_mem_reg.is_jump = ex_reg.is_jump;
 	assign next_mem_reg.is_ecall = ex_reg.is_ecall;
@@ -217,27 +218,33 @@ module datapath(
 			mem_reg <= next_mem_reg;
 	end
 
-	assign dmemif.rd_addr = mem_reg.alu_out;
-	assign dmemif.rd_size = mem_reg.dmem_rd_size;
-	assign dmemif.wr_addr = mem_reg.alu_out;
-	assign dmemif.wr_data = mem_reg.regfile_out2;
-	assign dmemif.wr_size = mem_reg.dmem_wr_size;
-	assign dmemif.wr_enable = mem_reg.dmem_wr_enable && mem_reg.valid;
+	assign dcache_bus.addr = mem_reg.alu_out;
+	assign dcache_bus.wr_data = mem_reg.regfile_out2;
+	assign dcache_bus.wr_size = mem_reg.dcache_wr_size;
+	assign dcache_bus.write = mem_reg.dcache_wr_enable;
+	assign dcache_bus.valid = mem_reg.dcache_wr_enable && mem_reg.valid;
 
-	logic [31:0] mem_dmem_rd_data_sext;
+	logic [31:0] mem_dcache_rd_data_sext;
 
 	always_comb begin
-		if (mem_reg.dmem_rd_signed) begin
-			priority case (mem_reg.dmem_rd_size)
-			MEM_ACCESS_SIZE_WORD:
-				mem_dmem_rd_data_sext = dmemif.rd_data;
-			MEM_ACCESS_SIZE_HALF:
-				mem_dmem_rd_data_sext = {{16{dmemif.rd_data[15]}}, dmemif.rd_data[15:0]};
-			MEM_ACCESS_SIZE_BYTE:
-				mem_dmem_rd_data_sext = {{24{dmemif.rd_data[7]}}, dmemif.rd_data[7:0]};
+		if (mem_reg.dcache_rd_signed) begin
+			priority case (mem_reg.dcache_rd_size)
+			CACHE_ACCESS_SIZE_WORD:
+				mem_dcache_rd_data_sext = dcache_bus.rd_data;
+			CACHE_ACCESS_SIZE_HALF:
+				mem_dcache_rd_data_sext = {{16{dcache_bus.rd_data[15]}}, dcache_bus.rd_data[15:0]};
+			CACHE_ACCESS_SIZE_BYTE:
+				mem_dcache_rd_data_sext = {{24{dcache_bus.rd_data[7]}}, dcache_bus.rd_data[7:0]};
 			endcase
 		end else begin
-			mem_dmem_rd_data_sext = dmemif.rd_data;
+			priority case (mem_reg.dcache_rd_size)
+			CACHE_ACCESS_SIZE_WORD:
+				mem_dcache_rd_data_sext = dcache_bus.rd_data;
+			CACHE_ACCESS_SIZE_HALF:
+				mem_dcache_rd_data_sext = {16'b0, dcache_bus.rd_data[15:0]};
+			CACHE_ACCESS_SIZE_BYTE:
+				mem_dcache_rd_data_sext = {24'b0, dcache_bus.rd_data[7:0]};
+			endcase
 		end
 	end
 
@@ -249,7 +256,7 @@ module datapath(
 	assign next_wb_reg.csr_we = mem_reg.csr_we;
 	assign next_wb_reg.alu_out = mem_reg.alu_out;
 	assign next_wb_reg.regfile_wr_sel = mem_reg.regfile_wr_sel;
-	assign next_wb_reg.dmem_rd_data = mem_dmem_rd_data_sext;
+	assign next_wb_reg.dcache_rd_data = mem_dcache_rd_data_sext;
 	assign next_wb_reg.is_ecall = mem_reg.is_ecall;
 	assign next_wb_reg.valid = mem_reg.valid;
 
@@ -268,7 +275,7 @@ module datapath(
 		REGFILE_WR_SEL_PC_4:
 			wb_regfile_wr_data = wb_reg.pc + 4;
 		REGFILE_WR_SEL_DMEM_RD_DATA:
-			wb_regfile_wr_data = wb_reg.dmem_rd_data;
+			wb_regfile_wr_data = wb_reg.dcache_rd_data;
 		REGFILE_WR_SEL_CSR_OUT:
 			wb_regfile_wr_data = wb_reg.csr_out;
 		endcase

@@ -47,6 +47,7 @@ module memory_arbiter(
 	end
 
 	always_comb begin
+		next_state = state;
 		priority case (state)
 		READY: begin
 			/* Dcache has priority over Icache */

@@ -1,4 +1,5 @@
 import definitions::*;
+import cache_interface_types::*;
 
 module decode(
 	input instruction_t instr_i,

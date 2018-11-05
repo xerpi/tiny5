@@ -20,8 +20,8 @@ module memory_arbiter(
 		priority case (state)
 		READY: begin
 			memory_bus.valid = 0;
-			icache_memory_bus.ready = 1;
-			dcache_memory_bus.ready = 1;
+			icache_memory_bus.ready = memory_bus.ready;
+			dcache_memory_bus.ready = memory_bus.ready;
 		end
 		ICACHE_REQUEST,
 		ICACHE_WAIT: begin
@@ -50,11 +50,13 @@ module memory_arbiter(
 		next_state = state;
 		priority case (state)
 		READY: begin
-			/* Dcache has priority over Icache */
-			if (dcache_memory_bus.valid)
-				next_state = DCACHE_REQUEST;
-			else if (icache_memory_bus.valid)
-				next_state = ICACHE_REQUEST;
+			if (memory_bus.ready) begin
+				/* Dcache has priority over Icache */
+				if (dcache_memory_bus.valid)
+					next_state = DCACHE_REQUEST;
+				else if (icache_memory_bus.valid)
+					next_state = ICACHE_REQUEST;
+			end
 		end
 		ICACHE_REQUEST:
 			if (!icache_memory_bus.valid)

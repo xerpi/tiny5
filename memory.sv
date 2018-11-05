@@ -5,13 +5,14 @@ module memory #(
 	parameter DELAY_CYCLES = 5,
 	localparam NUM_LINES = SIZE / LINE_SIZE,
 	localparam INDEX_BITS = $clog2(NUM_LINES),
-	localparam OFFSET_BITS = $clog2(LINE_SIZE / 8)
+	localparam OFFSET_BITS = $clog2(LINE_SIZE / 8),
+	localparam HEX_LOAD_ADDR = 'h1000
 ) (
 	input logic clk_i,
 	input logic reset_i,
 	memory_interface.slave memory_bus
 );
-	logic [LINE_SIZE - 1 : 0] data[NUM_LINES - 1 : 0];
+	logic [LINE_SIZE - 1 : 0] data[NUM_LINES];
 	logic [INDEX_BITS - 1 : 0] access_index;
 	logic [$clog2(DELAY_CYCLES) - 1 : 0] counter;
 	logic [$clog2(DELAY_CYCLES) - 1 : 0] next_counter;
@@ -20,7 +21,7 @@ module memory #(
 	assign next_counter = (counter > 0) ? counter - 1 : 0;
 	assign ready = (counter == 0);
 
-	assign access_index = memory_bus.addr[(INDEX_BITS + OFFSET_BITS) - 1 : OFFSET_BITS];
+	assign access_index = memory_bus.addr[OFFSET_BITS +: INDEX_BITS];
 	assign memory_bus.rd_data = data[access_index];
 	assign memory_bus.ready = ready;
 
@@ -36,14 +37,9 @@ module memory #(
 
 	always_ff @(posedge clk_i) begin
 		if (reset_i) begin
-			for (integer i = 0; i < NUM_LINES; i++)
-				data[i] <= {LINE_SIZE{1'b0}};
+			$readmemh("memory.hex.txt", data, HEX_LOAD_ADDR / (LINE_SIZE / 8));
 		end else if (ready && memory_bus.valid && memory_bus.write) begin
 			data[access_index] <= memory_bus.wr_data;
 		end
-	end
-
-	initial begin
-		$readmemh("memory.hex.txt", data);
 	end
 endmodule

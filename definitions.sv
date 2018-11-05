@@ -243,6 +243,7 @@ typedef struct packed {
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;
+	logic is_mem_access;
 	logic valid;
 } pipeline_ex_reg_t;
 
@@ -264,6 +265,7 @@ typedef struct packed {
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;
+	logic is_mem_access;
 	logic valid;
 } pipeline_mem_reg_t;
 
@@ -298,6 +300,7 @@ typedef struct packed {
 	logic is_branch;
 	logic is_jump;
 	logic is_ecall;
+	logic is_mem_access;
 } decode_out_t;
 
 typedef enum logic [1:0] {

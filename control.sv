@@ -5,6 +5,10 @@ module control(
 	input pipeline_ex_reg_t ex_reg_i,
 	input pipeline_mem_reg_t mem_reg_i,
 	input pipeline_wb_reg_t wb_reg_i,
+	input logic icache_ready_i,
+	input logic icache_miss_i,
+	input logic dcache_ready_i,
+	input logic dcache_miss_i,
 	output pipeline_control_t control_o
 );
 	/* Check data hazards with the current instruction being decoded */

@@ -13,6 +13,7 @@ module decode(
 		decode_o.is_branch = 0;
 		decode_o.is_jump = 0;
 		decode_o.is_ecall = 0;
+		decode_o.is_mem_access = 0;
 
 		priority case (instr_i.common.opcode)
 		OPCODE_LUI: begin
@@ -71,6 +72,7 @@ module decode(
 			decode_o.alu_op = ALU_OP_ADD;
 			decode_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			decode_o.alu_in2_sel = ALU_IN2_SEL_IMM;
+			decode_o.is_mem_access = 1;
 
 			priority case (instr_i.itype.funct3)
 			FUNCT3_LOAD_LB, FUNCT3_LOAD_LBU:
@@ -91,6 +93,7 @@ module decode(
 			decode_o.alu_op = ALU_OP_ADD;
 			decode_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
 			decode_o.alu_in2_sel = ALU_IN2_SEL_IMM;
+			decode_o.is_mem_access = 1;
 
 			priority case (instr_i.itype.funct3)
 			FUNCT3_STORE_SB:

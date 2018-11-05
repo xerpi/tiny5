@@ -34,6 +34,10 @@ module datapath(
 		.ex_reg_i(ex_reg),
 		.mem_reg_i(mem_reg),
 		.wb_reg_i(wb_reg),
+		.icache_ready_i(icache_bus.ready),
+		.icache_miss_i(icache_bus.miss),
+		.dcache_ready_i(dcache_bus.ready),
+		.dcache_miss_i(dcache_bus.miss),
 		.control_o(control)
 	);
 
@@ -145,6 +149,7 @@ module datapath(
 	assign next_ex_reg.is_branch = control.decode_out.is_branch;
 	assign next_ex_reg.is_jump = control.decode_out.is_jump;
 	assign next_ex_reg.is_ecall = control.decode_out.is_ecall;
+	assign next_ex_reg.is_mem_access = control.decode_out.is_mem_access;
 	assign next_ex_reg.valid = control.ex_reg_valid;
 
 	/* EX stage */
@@ -208,6 +213,7 @@ module datapath(
 	assign next_mem_reg.is_branch = ex_reg.is_branch;
 	assign next_mem_reg.is_jump = ex_reg.is_jump;
 	assign next_mem_reg.is_ecall = ex_reg.is_ecall;
+	assign next_mem_reg.is_mem_access = ex_reg.is_mem_access;
 	assign next_mem_reg.valid = control.mem_reg_valid;
 
 	/* MEM stage */
@@ -222,7 +228,7 @@ module datapath(
 	assign dcache_bus.wr_data = mem_reg.regfile_out2;
 	assign dcache_bus.wr_size = mem_reg.dcache_wr_size;
 	assign dcache_bus.write = mem_reg.dcache_wr_enable;
-	assign dcache_bus.valid = mem_reg.dcache_wr_enable && mem_reg.valid;
+	assign dcache_bus.valid = mem_reg.is_mem_access && mem_reg.valid;
 
 	logic [31:0] mem_dcache_rd_data_sext;
 

@@ -31,14 +31,12 @@ module cache # (
 		logic [TAG_BITS - 1 : 0] tag;
 	} cache_line_t;
 
-	typedef enum logic [2:0] {
+	typedef enum logic [5:0] {
 		READY,
 		FILL_REQUEST,
 		FILL_WAIT,
-		FILL_UPDATE,
 		WRITEBACK_REQUEST,
-		WRITEBACK_WAIT,
-		WRITEBACK_UPDATE
+		WRITEBACK_WAIT
 	} cache_state_t;
 
 	/* Registers */
@@ -82,10 +80,7 @@ module cache # (
 		end
 		FILL_WAIT: begin
 			if (memory_bus.ready)
-				next_state = FILL_UPDATE;
-		end
-		FILL_UPDATE: begin
-			next_state = READY;
+				next_state = READY;
 		end
 		WRITEBACK_REQUEST: begin
 			if (!memory_bus.ready)
@@ -93,10 +88,7 @@ module cache # (
 		end
 		WRITEBACK_WAIT: begin
 			if (memory_bus.ready)
-				next_state = WRITEBACK_UPDATE;
-		end
-		WRITEBACK_UPDATE: begin
-			next_state = FILL_REQUEST;
+				next_state = FILL_REQUEST;
 		end
 		endcase
 	end
@@ -124,16 +116,8 @@ module cache # (
 		end
 		FILL_WAIT: begin
 			cache_bus.ready = 0;
-			cache_wr_enable = 0;
+			cache_wr_enable = memory_bus.ready;
 			memory_bus.addr = cache_bus.addr;
-			memory_bus.wr_data = 0;
-			memory_bus.write = 0;
-			memory_bus.valid = 0;
-		end
-		FILL_UPDATE:  begin
-			cache_bus.ready = 0;
-			cache_wr_enable = 1;
-			memory_bus.addr = 0;
 			memory_bus.wr_data = 0;
 			memory_bus.write = 0;
 			memory_bus.valid = 0;
@@ -148,18 +132,10 @@ module cache # (
 		end
 		WRITEBACK_WAIT: begin
 			cache_bus.ready = 0;
-			cache_wr_enable = 0;
+			cache_wr_enable = memory_bus.ready;
 			memory_bus.addr = writeback_addr;
 			memory_bus.wr_data = cur_line.data;
 			memory_bus.write = 1;
-			memory_bus.valid = 0;
-		end
-		WRITEBACK_UPDATE:  begin
-			cache_bus.ready = 0;
-			cache_wr_enable = 1;
-			memory_bus.addr = 0;
-			memory_bus.wr_data = 0;
-			memory_bus.write = 0;
 			memory_bus.valid = 0;
 		end
 		endcase
@@ -183,7 +159,7 @@ module cache # (
 			next_line.valid = cur_line.valid;
 			next_line.dirty = cur_line.dirty || cache_bus.write;
 		end
-		FILL_UPDATE: begin
+		FILL_WAIT: begin
 			next_line.data = memory_bus.rd_data;
 			if (cache_bus.write) begin
 				priority case (cache_bus.wr_size)
@@ -201,7 +177,7 @@ module cache # (
 			next_line.valid = 1;
 			next_line.dirty = cache_bus.write;
 		end
-		WRITEBACK_UPDATE:  begin
+		WRITEBACK_WAIT:  begin
 			next_line.data = cur_line.data;
 			next_line.tag = cur_line.tag;
 			next_line.valid = cur_line.valid;

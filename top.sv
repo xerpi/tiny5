@@ -37,8 +37,6 @@ module top(
 	) dcache_bus ();
 
 	memory_arbiter memory_arbiter(
-		.clk_i(clk_i),
-		.reset_i(reset_i),
 		.icache_memory_bus(icache_memory_bus),
 		.dcache_memory_bus(dcache_memory_bus),
 		.memory_bus(memory_bus)

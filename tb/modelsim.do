@@ -11,6 +11,9 @@ add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mem_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/wb_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/regfile/registers
 
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/icache_busy
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/dcache_busy
+
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.addr
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.rd_data
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.wr_data
@@ -36,8 +39,6 @@ add wave -radix 16 -expand -group {ICache} sim:/top/icache/lines
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/state
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/is_miss
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/lines
-
-add wave -radix 16 -expand -group {Memory arbiter} sim:/top/memory_arbiter/state
 
 add wave -radix 16 -expand -group {ICache memory bus} sim:/top/icache_memory_bus.addr
 add wave -radix 16 -expand -group {ICache memory bus} sim:/top/icache_memory_bus.rd_data

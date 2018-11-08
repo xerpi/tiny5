@@ -30,8 +30,6 @@ module datapath(
 
 	/* Control unit */
 	control control_unit(
-		.clk_i(clk_i),
-		.reset_i(reset_i),
 		.id_reg_i(id_reg),
 		.ex_reg_i(ex_reg),
 		.mem_reg_i(mem_reg),
@@ -54,6 +52,8 @@ module datapath(
 	end
 
 	assign icache_bus.addr = pc;
+	assign icache_bus.wr_data = 0; /* don't care */
+	assign icache_bus.wr_size = CACHE_ACCESS_SIZE_WORD; /* don't care */
 	assign icache_bus.write = 0;
 
 	always_comb begin

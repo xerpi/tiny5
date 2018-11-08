@@ -6,7 +6,7 @@ TRACE_FILE = trace.fst
 VERILOG_SOURCES = cache_interface_types.sv definitions.sv alu.sv compare_unit.sv \
 	control.sv datapath.sv decode.sv forwarding.sv regfile.sv csr.sv immediate.sv \
 	cache_interface.sv memory_interface.sv memory_arbiter.sv cache.sv memory.sv \
-	cache_controller.sv top.sv
+	top.sv
 
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
 TEST_SOURCES = test/start.s

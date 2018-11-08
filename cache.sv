@@ -51,8 +51,10 @@ module cache # (
 	logic is_miss;
 	logic cache_wr_enable;
 	logic [ADDR_SIZE - 1 : 0] writeback_addr;
+	logic [ADDR_SIZE - 1 : 0] cpu_aligned_addr;
 
 	assign cpu_addr = cache_bus.addr;
+	assign cpu_aligned_addr = {cpu_addr.tag, cpu_addr.index, {WORD_BITS + WOFF_BITS{1'b0}}};
 	assign cur_line = lines[cpu_addr.index];
 
 	assign is_miss = !cur_line.valid || (cpu_addr.tag != cur_line.tag);
@@ -109,7 +111,7 @@ module cache # (
 		FILL_REQUEST: begin
 			cache_bus.ready = 0;
 			cache_wr_enable = 0;
-			memory_bus.addr = cache_bus.addr;
+			memory_bus.addr = cpu_aligned_addr;
 			memory_bus.wr_data = 0;
 			memory_bus.write = 0;
 			memory_bus.valid = 1;
@@ -118,7 +120,7 @@ module cache # (
 			cache_bus.rd_data = next_line.data[cpu_addr.word];
 			cache_bus.ready = memory_bus.ready;
 			cache_wr_enable = memory_bus.ready;
-			memory_bus.addr = cache_bus.addr;
+			memory_bus.addr = cpu_aligned_addr;
 			memory_bus.wr_data = 0;
 			memory_bus.write = 0;
 			memory_bus.valid = 0;

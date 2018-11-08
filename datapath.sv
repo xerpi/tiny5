@@ -30,6 +30,8 @@ module datapath(
 
 	/* Control unit */
 	control control_unit(
+		.clk_i(clk_i),
+		.reset_i(reset_i),
 		.id_reg_i(id_reg),
 		.ex_reg_i(ex_reg),
 		.mem_reg_i(mem_reg),
@@ -38,7 +40,9 @@ module datapath(
 		.icache_miss_i(icache_bus.miss),
 		.dcache_ready_i(dcache_bus.ready),
 		.dcache_miss_i(dcache_bus.miss),
-		.control_o(control)
+		.control_o(control),
+		.icache_valid_o(icache_bus.valid),
+		.dcache_valid_o(dcache_bus.valid)
 	);
 
 	/* IF stage */
@@ -51,7 +55,6 @@ module datapath(
 
 	assign icache_bus.addr = pc;
 	assign icache_bus.write = 0;
-	assign icache_bus.valid = !control.pc_reg_stall;
 
 	always_comb begin
 		priority case (control.next_pc_sel)
@@ -157,7 +160,7 @@ module datapath(
 		if (reset_i)
 			ex_reg <= 'b0;
 		else
-			ex_reg <= next_ex_reg;
+			ex_reg <= control.ex_reg_stall ? ex_reg : next_ex_reg;
 	end
 
 	logic [31:0] ex_alu_in1;
@@ -221,14 +224,13 @@ module datapath(
 		if (reset_i)
 			mem_reg <= 'b0;
 		else
-			mem_reg <= next_mem_reg;
+			mem_reg <= control.mem_reg_stall ? mem_reg : next_mem_reg;
 	end
 
 	assign dcache_bus.addr = mem_reg.alu_out;
 	assign dcache_bus.wr_data = mem_reg.regfile_out2;
 	assign dcache_bus.wr_size = mem_reg.dcache_wr_size;
 	assign dcache_bus.write = mem_reg.dcache_wr_enable;
-	assign dcache_bus.valid = mem_reg.is_mem_access && mem_reg.valid;
 
 	logic [31:0] mem_dcache_rd_data_sext;
 
@@ -264,7 +266,7 @@ module datapath(
 	assign next_wb_reg.regfile_wr_sel = mem_reg.regfile_wr_sel;
 	assign next_wb_reg.dcache_rd_data = mem_dcache_rd_data_sext;
 	assign next_wb_reg.is_ecall = mem_reg.is_ecall;
-	assign next_wb_reg.valid = mem_reg.valid;
+	assign next_wb_reg.valid = control.wb_reg_valid;
 
 	/* WB stage */
 	always_ff @(posedge clk_i) begin

@@ -1,10 +1,10 @@
 [*]
 [*] GTKWave Analyzer v3.3.96 (w)1999-2018 BSI
-[*] Mon Oct 22 14:46:44 2018
+[*] Mon Nov  5 16:30:12 2018
 [*]
 [dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.fst"
-[dumpfile_mtime] "Mon Oct 22 14:46:10 2018"
-[dumpfile_size] 65731
+[dumpfile_mtime] "Mon Nov  5 16:30:05 2018"
+[dumpfile_size] 46988
 [savefile] "/home/xerpi/Desktop/tiny5/tiny5/trace.sav"
 [timestart] 0
 [size] 1920 1025
@@ -18,7 +18,7 @@
 [sst_width] 275
 [signals_width] 389
 [sst_expanded] 1
-[sst_vpaned_height] 292
+[sst_vpaned_height] 438
 @28
 TOP.top.reset_i
 TOP.top.clk_i
@@ -26,6 +26,10 @@ TOP.top.clk_i
 -Pipeline registers
 @22
 TOP.top.datapath.pc[31:0]
+TOP.top.datapath.id_reg[64:0]
+TOP.top.datapath.ex_reg[201:0]
+TOP.top.datapath.mem_reg[160:0]
+TOP.top.datapath.wb_reg[150:0]
 @1000200
 -Pipeline registers
 @800200
@@ -53,9 +57,6 @@ TOP.top.datapath.regfile.registers(29)[31:0]
 TOP.top.datapath.regfile.registers(30)[31:0]
 @1000200
 -Registers
-@22
-TOP.top.dmemif.rd_addr[31:0]
-TOP.top.dmemif.rd_data[31:0]
 @800200
 -Bypasses
 @28
@@ -67,9 +68,16 @@ TOP.top.datapath.control_unit.ex_alu_out_to_reg1_bypass
 @22
 TOP.top.datapath.csr.reg_cycle[63:0]
 TOP.top.datapath.csr.reg_instret[63:0]
-@23
 TOP.top.datapath.csr.reg_time[63:0]
 @1000200
 -CSR
+@28
+TOP.top.datapath.control_unit.icache_miss_i
+TOP.top.datapath.control_unit.icache_ready_i
+TOP.top.datapath.control_unit.dcache_miss_i
+TOP.top.datapath.control_unit.dcache_ready_i
+TOP.top.icache.state[2:0]
+@23
+TOP.top.memory_bus.rd_data[255:0]
 [pattern_trace] 1
 [pattern_trace] 0

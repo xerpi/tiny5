@@ -1,6 +1,8 @@
 import definitions::*;
 
 module control(
+	input clk_i,
+	input reset_i,
 	input pipeline_id_reg_t id_reg_i,
 	input pipeline_ex_reg_t ex_reg_i,
 	input pipeline_mem_reg_t mem_reg_i,
@@ -9,7 +11,9 @@ module control(
 	input logic icache_miss_i,
 	input logic dcache_ready_i,
 	input logic dcache_miss_i,
-	output pipeline_control_t control_o
+	output pipeline_control_t control_o,
+	output logic icache_valid_o,
+	output logic dcache_valid_o
 );
 	/* Check data hazards with the current instruction being decoded */
 	logic ex_data_hazard;
@@ -74,6 +78,17 @@ module control(
 
 	/* IF stage control signals */
 	logic control_hazard;
+	logic icache_controller_busy;
+
+	cache_controller icache_controller(
+		.clk_i(clk_i),
+		.reset_i(reset_i),
+		.valid(1'b1),
+		.busy(icache_controller_busy),
+		.cache_ready(icache_ready_i),
+		.cache_miss(icache_miss_i),
+		.cache_valid(icache_valid_o)
+	);
 
 	always_comb begin
 		control_hazard = 0;
@@ -94,18 +109,45 @@ module control(
 		end
 	end
 
-	assign control_o.pc_reg_stall = data_hazard && !control_hazard;
-	assign control_o.id_reg_stall = data_hazard && !control_hazard;
-	assign control_o.id_reg_valid = !control_hazard;
-
 	/* ID stage control signals */
 	decode decode(
 		.instr_i(id_reg_i.instr),
 		.decode_o(control_o.decode_out)
 	);
 
+	/* EX stage control signals */
+
+	/* MEM stage control signals */
+	logic dcache_access;
+	logic dcache_controller_busy;
+
+	assign dcache_access = mem_reg_i.is_mem_access && mem_reg_i.valid;
+
+	cache_controller dcache_controller(
+		.clk_i(clk_i),
+		.reset_i(reset_i),
+		.valid(dcache_access),
+		.busy(dcache_controller_busy), // && is_mem_access
+		.cache_ready(dcache_ready_i),
+		.cache_miss(dcache_miss_i),
+		.cache_valid(dcache_valid_o)
+	);
+
+	/* Pipeline interlock logic */
+	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||
+					icache_controller_busy ||
+					dcache_controller_busy;
+
+	assign control_o.id_reg_stall = (data_hazard && !control_hazard) ||
+					dcache_controller_busy;
+	assign control_o.id_reg_valid = !control_hazard &&
+					!icache_controller_busy;
+
+	assign control_o.ex_reg_stall = dcache_controller_busy;
 	assign control_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
 
-	/* EX stage control signals */
+	assign control_o.mem_reg_stall = dcache_controller_busy;
 	assign control_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
+
+	assign control_o.wb_reg_valid = mem_reg_i.valid && !dcache_controller_busy;
 endmodule

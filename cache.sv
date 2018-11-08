@@ -40,7 +40,7 @@ module cache # (
 	} cache_state_t;
 
 	/* Registers */
-	cache_line_t lines[NUM_LINES - 1 : 0];
+	cache_line_t lines[NUM_LINES];
 	cache_state_t state;
 
 	/* Wires */
@@ -58,7 +58,6 @@ module cache # (
 	assign is_miss = !cur_line.valid || (cpu_addr.tag != cur_line.tag);
 	assign writeback_addr = {cur_line.tag, cpu_addr.index, {WORD_BITS + WOFF_BITS{1'b0}}};
 
-	assign cache_bus.rd_data = cur_line.data[cpu_addr.word];
 	assign cache_bus.miss = is_miss;
 
 	/* FSM next state logic */
@@ -97,6 +96,7 @@ module cache # (
 	always_comb begin
 		priority case (state)
 		READY: begin
+			cache_bus.rd_data = cur_line.data[cpu_addr.word];
 			cache_bus.ready = 1;
 			cache_wr_enable = cache_bus.valid &&
 					  cache_bus.write &&
@@ -115,7 +115,8 @@ module cache # (
 			memory_bus.valid = 1;
 		end
 		FILL_WAIT: begin
-			cache_bus.ready = 0;
+			cache_bus.rd_data = next_line.data[cpu_addr.word];
+			cache_bus.ready = memory_bus.ready;
 			cache_wr_enable = memory_bus.ready;
 			memory_bus.addr = cache_bus.addr;
 			memory_bus.wr_data = 0;

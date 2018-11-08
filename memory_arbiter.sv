@@ -19,7 +19,8 @@ module memory_arbiter(
 	always_comb begin
 		priority case (state)
 		READY: begin
-			memory_bus.valid = 0;
+			memory_bus.valid = dcache_memory_bus.valid ||
+					   icache_memory_bus.valid;
 			icache_memory_bus.ready = memory_bus.ready;
 			dcache_memory_bus.ready = memory_bus.ready;
 		end
@@ -59,16 +60,16 @@ module memory_arbiter(
 			end
 		end
 		ICACHE_REQUEST:
-			if (!icache_memory_bus.valid)
+			if (!memory_bus.ready)
 				next_state = ICACHE_WAIT;
 		ICACHE_WAIT:
-			if (icache_memory_bus.valid)
+			if (memory_bus.ready)
 				next_state = READY;
 		DCACHE_REQUEST:
-			if (!dcache_memory_bus.valid)
+			if (!memory_bus.ready)
 				next_state = DCACHE_WAIT;
 		DCACHE_WAIT:
-			if (dcache_memory_bus.valid)
+			if (memory_bus.ready)
 				next_state = READY;
 		endcase
 	end

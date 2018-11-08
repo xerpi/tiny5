@@ -5,7 +5,8 @@ TRACE_FILE = trace.fst
 
 VERILOG_SOURCES = cache_interface_types.sv definitions.sv alu.sv compare_unit.sv \
 	control.sv datapath.sv decode.sv forwarding.sv regfile.sv csr.sv immediate.sv \
-	cache_interface.sv memory_interface.sv memory_arbiter.sv cache.sv memory.sv top.sv
+	cache_interface.sv memory_interface.sv memory_arbiter.sv cache.sv memory.sv \
+	cache_controller.sv top.sv
 
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
 TEST_SOURCES = test/start.s
@@ -14,7 +15,7 @@ VERILATOR_VTOP = V$(TOP_MODULE)
 CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
 VERILATOR_FLAGS = -Wall -Wno-fatal --unroll-count 2048 --x-initial-edge --top-module $(TOP_MODULE)
 TEST_CFLAGS = -march=rv32i -mabi=ilp32 -nostartfiles -nostdlib
-HEXDUMP_FLAGS = -ve '32/1 "%02x" " "'
+HEXDUMP_FLAGS = -ve '1/1 "%02X "'
 
 all: lint
 

@@ -320,9 +320,13 @@ typedef struct packed {
 	decode_out_t decode_out;
 	alu_out_bypass_from_t alu_out_to_reg1_bypass;
 	alu_out_bypass_from_t alu_out_to_reg2_bypass;
+	logic ex_reg_stall;
 	logic ex_reg_valid;
 	/* EX stage */
+	logic mem_reg_stall;
 	logic mem_reg_valid;
+	/* MEM stage */
+	logic wb_reg_valid;
 } pipeline_control_t;
 
 /* Helper functions */

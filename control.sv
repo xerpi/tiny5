@@ -112,7 +112,7 @@ module control(
 	logic dcache_busy;
 
 	assign dcache_valid_o = mem_reg_i.is_mem_access && mem_reg_i.valid;
-	assign dcache_busy = mem_reg_i.is_mem_access &&
+	assign dcache_busy = mem_reg_i.is_mem_access && mem_reg_i.valid &&
 			     (dcache_miss_i || !dcache_ready_i);
 
 	/* Pipeline interlock logic */

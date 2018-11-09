@@ -2,12 +2,12 @@ import cache_interface_types::*;
 
 module cache_sign_extend # (
 	parameter WORD_SIZE = 32,
-	localparam OFFSET_SIZE = $clog2(WORD_SIZE / 8),
+	localparam OFFSET_BITS = $clog2(WORD_SIZE / 8),
 	localparam BYTE_BITS = $clog2(WORD_SIZE / 8),
 	localparam HALF_BITS = $clog2(WORD_SIZE / 16)
 ) (
 	input logic [WORD_SIZE - 1 : 0] data_in,
-	input logic [OFFSET_SIZE - 1 : 0] offset,
+	input logic [OFFSET_BITS - 1 : 0] offset,
 	input logic is_signed,
 	input cache_access_size_t size,
 	output logic [WORD_SIZE - 1 : 0] data_out
@@ -17,8 +17,8 @@ module cache_sign_extend # (
 	logic byte_parity;
 	logic half_parity;
 
-	assign byte_offset = offset[OFFSET_SIZE - 1 : (8 / 8 - 1)];
-	assign half_offset = offset[OFFSET_SIZE - 1 : (16 / 8 - 1)];
+	assign byte_offset = offset[OFFSET_BITS - 1 : (8 / 8 - 1)];
+	assign half_offset = offset[OFFSET_BITS - 1 : (16 / 8 - 1)];
 	assign byte_parity = is_signed & data_in[8 * byte_offset + 7];
 	assign half_parity = is_signed & data_in[16 * half_offset + 15];
 

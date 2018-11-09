@@ -1,7 +1,10 @@
 import definitions::*;
 import cache_interface_types::*;
 
-module datapath(
+module datapath # (
+	parameter CACHE_WORD_SIZE = 32,
+	localparam CACHE_OFFSET_BITS = $clog2(CACHE_WORD_SIZE / 8)
+) (
 	input logic clk_i,
 	input logic reset_i,
 	cache_interface.master icache_bus,
@@ -234,27 +237,15 @@ module datapath(
 
 	logic [31:0] mem_dcache_rd_data_sext;
 
-	always_comb begin
-		if (mem_reg.dcache_rd_signed) begin
-			priority case (mem_reg.dcache_rd_size)
-			CACHE_ACCESS_SIZE_WORD:
-				mem_dcache_rd_data_sext = dcache_bus.rd_data;
-			CACHE_ACCESS_SIZE_HALF:
-				mem_dcache_rd_data_sext = {{16{dcache_bus.rd_data[15]}}, dcache_bus.rd_data[15:0]};
-			CACHE_ACCESS_SIZE_BYTE:
-				mem_dcache_rd_data_sext = {{24{dcache_bus.rd_data[7]}}, dcache_bus.rd_data[7:0]};
-			endcase
-		end else begin
-			priority case (mem_reg.dcache_rd_size)
-			CACHE_ACCESS_SIZE_WORD:
-				mem_dcache_rd_data_sext = dcache_bus.rd_data;
-			CACHE_ACCESS_SIZE_HALF:
-				mem_dcache_rd_data_sext = {16'b0, dcache_bus.rd_data[15:0]};
-			CACHE_ACCESS_SIZE_BYTE:
-				mem_dcache_rd_data_sext = {24'b0, dcache_bus.rd_data[7:0]};
-			endcase
-		end
-	end
+	cache_sign_extend # (
+		.WORD_SIZE(CACHE_WORD_SIZE)
+	) dcache_sign_extend (
+		.data_in(dcache_bus.rd_data),
+		.offset(mem_reg.alu_out[0 +: CACHE_OFFSET_BITS]),
+		.is_signed(mem_reg.dcache_rd_signed),
+		.size(mem_reg.dcache_rd_size),
+		.data_out(mem_dcache_rd_data_sext)
+	);
 
 	assign next_wb_reg.pc = mem_reg.pc;
 	assign next_wb_reg.csr_out = mem_reg.csr_out;

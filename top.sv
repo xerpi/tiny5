@@ -77,7 +77,9 @@ module top(
 		.memory_bus(dcache_memory_bus)
 	);
 
-	datapath datapath(
+	datapath # (
+		.CACHE_WORD_SIZE(WORD_SIZE)
+	) datapath (
 		.clk_i(clk_i),
 		.reset_i(reset_i),
 		.icache_bus(icache_bus),

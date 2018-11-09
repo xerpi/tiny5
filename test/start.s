@@ -1,10 +1,16 @@
 	.text
 	.global _start
 _start:
-	li x1, 0x01
-	li x2, 0x02
-	add x3, x2, x1
-	sll x4, x3, x1
+	la x1, data
+	lb x2, 0(x1)
+	lbu x3, 1(x1)
+	lh x4, 0(x1)
+	lhu x5, 2(x1)
+
 	nop
 	nop
 	nop
+	nop
+
+data:
+	.word 0xAABBCCDD

@@ -11,16 +11,15 @@ module memory_arbiter(
 			memory_bus.wr_data = dcache_memory_bus.wr_data;
 			memory_bus.write = dcache_memory_bus.write;
 			memory_bus.valid = dcache_memory_bus.valid;
-			dcache_memory_bus.ready = memory_bus.ready;
-			icache_memory_bus.ready = 0;
 		end else begin
 			memory_bus.addr = icache_memory_bus.addr;
 			icache_memory_bus.rd_data = memory_bus.rd_data;
 			memory_bus.wr_data = icache_memory_bus.wr_data;
 			memory_bus.write = icache_memory_bus.write;
 			memory_bus.valid = icache_memory_bus.valid;
-			icache_memory_bus.ready = memory_bus.ready;
-			dcache_memory_bus.ready = 0;
 		end
+
+		icache_memory_bus.ready = memory_bus.ready;
+		dcache_memory_bus.ready = memory_bus.ready;
 	end
 endmodule

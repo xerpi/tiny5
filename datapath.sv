@@ -37,13 +37,11 @@ module datapath # (
 		.ex_reg_i(ex_reg),
 		.mem_reg_i(mem_reg),
 		.wb_reg_i(wb_reg),
-		.icache_ready_i(icache_bus.ready),
-		.icache_miss_i(icache_bus.miss),
-		.dcache_ready_i(dcache_bus.ready),
-		.dcache_miss_i(dcache_bus.miss),
+		.icache_hit_i(icache_bus.hit),
+		.dcache_hit_i(dcache_bus.hit),
 		.control_o(control),
-		.icache_valid_o(icache_bus.valid),
-		.dcache_valid_o(dcache_bus.valid)
+		.icache_access_o(icache_bus.access),
+		.dcache_access_o(dcache_bus.access)
 	);
 
 	/* IF stage */

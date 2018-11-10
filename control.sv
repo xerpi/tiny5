@@ -5,13 +5,11 @@ module control(
 	input pipeline_ex_reg_t ex_reg_i,
 	input pipeline_mem_reg_t mem_reg_i,
 	input pipeline_wb_reg_t wb_reg_i,
-	input logic icache_ready_i,
-	input logic icache_miss_i,
-	input logic dcache_ready_i,
-	input logic dcache_miss_i,
+	input logic icache_hit_i,
+	input logic dcache_hit_i,
 	output pipeline_control_t control_o,
-	output logic icache_valid_o,
-	output logic dcache_valid_o
+	output logic icache_access_o,
+	output logic dcache_access_o
 );
 	/* Check data hazards with the current instruction being decoded */
 	logic ex_data_hazard;
@@ -78,8 +76,8 @@ module control(
 	logic control_hazard;
 	logic icache_busy;
 
-	assign icache_valid_o = 1;
-	assign icache_busy = icache_miss_i || !icache_ready_i;
+	assign icache_access_o = 1;
+	assign icache_busy = !icache_hit_i;
 
 	always_comb begin
 		control_hazard = 0;
@@ -111,9 +109,9 @@ module control(
 	/* MEM stage control signals */
 	logic dcache_busy;
 
-	assign dcache_valid_o = mem_reg_i.is_mem_access && mem_reg_i.valid;
+	assign dcache_access_o = mem_reg_i.is_mem_access && mem_reg_i.valid;
 	assign dcache_busy = mem_reg_i.is_mem_access && mem_reg_i.valid &&
-			     (dcache_miss_i || !dcache_ready_i);
+			     !dcache_hit_i;
 
 	/* Pipeline interlock logic */
 	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||

@@ -48,7 +48,7 @@ module cache # (
 	cache_addr_t cpu_addr;
 	cache_line_t cur_line;
 	cache_line_t next_line;
-	logic is_miss;
+	logic hit;
 	logic cache_wr_enable;
 	logic [ADDR_SIZE - 1 : 0] writeback_addr;
 	logic [ADDR_SIZE - 1 : 0] cpu_aligned_addr;
@@ -57,10 +57,11 @@ module cache # (
 	assign cpu_aligned_addr = {cpu_addr.tag, cpu_addr.index, {WORD_BITS + WOFF_BITS{1'b0}}};
 	assign cur_line = lines[cpu_addr.index];
 
-	assign is_miss = !cur_line.valid || (cpu_addr.tag != cur_line.tag);
+	assign hit = cur_line.valid && (cpu_addr.tag == cur_line.tag);
 	assign writeback_addr = {cur_line.tag, cpu_addr.index, {WORD_BITS + WOFF_BITS{1'b0}}};
 
-	assign cache_bus.miss = is_miss;
+	assign cache_bus.rd_data = cur_line.data[cpu_addr.word];
+	assign cache_bus.hit = hit;
 
 	/* FSM next state logic */
 	always_comb begin
@@ -68,7 +69,7 @@ module cache # (
 
 		priority case (state)
 		READY: begin
-			if (cache_bus.valid && is_miss && memory_bus.ready) begin
+			if (cache_bus.access && !hit && memory_bus.ready) begin
 				if (cur_line.dirty)
 					next_state = WRITEBACK_REQUEST;
 				else
@@ -98,18 +99,15 @@ module cache # (
 	always_comb begin
 		priority case (state)
 		READY: begin
-			cache_bus.rd_data = cur_line.data[cpu_addr.word];
-			cache_bus.ready = 1;
-			cache_wr_enable = cache_bus.valid &&
+			cache_wr_enable = cache_bus.access &&
 					  cache_bus.write &&
-					  !is_miss;
+					  hit;
 			memory_bus.addr = 0;
 			memory_bus.wr_data = 0;
 			memory_bus.write = 0;
 			memory_bus.valid = 0;
 		end
 		FILL_REQUEST: begin
-			cache_bus.ready = 0;
 			cache_wr_enable = 0;
 			memory_bus.addr = cpu_aligned_addr;
 			memory_bus.wr_data = 0;
@@ -117,8 +115,6 @@ module cache # (
 			memory_bus.valid = 1;
 		end
 		FILL_WAIT: begin
-			cache_bus.rd_data = next_line.data[cpu_addr.word];
-			cache_bus.ready = memory_bus.ready;
 			cache_wr_enable = memory_bus.ready;
 			memory_bus.addr = cpu_aligned_addr;
 			memory_bus.wr_data = 0;
@@ -126,7 +122,6 @@ module cache # (
 			memory_bus.valid = 0;
 		end
 		WRITEBACK_REQUEST: begin
-			cache_bus.ready = 0;
 			cache_wr_enable = 0;
 			memory_bus.addr = writeback_addr;
 			memory_bus.wr_data = cur_line.data;
@@ -134,7 +129,6 @@ module cache # (
 			memory_bus.valid = 1;
 		end
 		WRITEBACK_WAIT: begin
-			cache_bus.ready = 0;
 			cache_wr_enable = memory_bus.ready;
 			memory_bus.addr = writeback_addr;
 			memory_bus.wr_data = cur_line.data;
@@ -164,21 +158,9 @@ module cache # (
 		end
 		FILL_WAIT: begin
 			next_line.data = memory_bus.rd_data;
-			if (cache_bus.write) begin
-				priority case (cache_bus.wr_size)
-				CACHE_ACCESS_SIZE_BYTE:
-					next_line.data[cpu_addr.word]
-						      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[7:0];
-				CACHE_ACCESS_SIZE_HALF:
-					next_line.data[cpu_addr.word]
-						      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[15:0];
-				CACHE_ACCESS_SIZE_WORD:
-					next_line.data[cpu_addr.word] = cache_bus.wr_data;
-				endcase
-			end
 			next_line.tag = cpu_addr.tag;
 			next_line.valid = 1;
-			next_line.dirty = cache_bus.write;
+			next_line.dirty = 0;
 		end
 		WRITEBACK_WAIT:  begin
 			next_line.data = cur_line.data;

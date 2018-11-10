@@ -9,9 +9,8 @@ interface cache_interface # (
 	logic [WORD_SIZE - 1 : 0] wr_data;
 	cache_access_size_t wr_size;
 	logic write;
-	logic valid;
-	logic ready;
-	logic miss;
+	logic access;
+	logic hit;
 
 	modport master(
 		output addr,
@@ -19,9 +18,8 @@ interface cache_interface # (
 		output wr_data,
 		output wr_size,
 		output write,
-		output valid,
-		input ready,
-		input miss
+		output access,
+		input hit
 	);
 
 	modport slave(
@@ -30,8 +28,7 @@ interface cache_interface # (
 		input wr_data,
 		input wr_size,
 		input write,
-		input valid,
-		output ready,
-		output miss
+		input access,
+		output hit
 	);
 endinterface

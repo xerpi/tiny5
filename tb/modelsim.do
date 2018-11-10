@@ -40,6 +40,8 @@ add wave -radix 16 -expand -group {DCache} sim:/top/dcache/state
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/is_miss
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/lines
 
+add wave -radix 16 -expand -group {Memory arbiter} sim:/top/memory_arbiter/state
+
 add wave -radix 16 -expand -group {ICache memory bus} sim:/top/icache_memory_bus.addr
 add wave -radix 16 -expand -group {ICache memory bus} sim:/top/icache_memory_bus.rd_data
 add wave -radix 16 -expand -group {ICache memory bus} sim:/top/icache_memory_bus.wr_data

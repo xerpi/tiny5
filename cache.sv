@@ -31,7 +31,7 @@ module cache # (
 		logic [TAG_BITS - 1 : 0] tag;
 	} cache_line_t;
 
-	typedef enum logic [5:0] {
+	typedef enum logic [3:0] {
 		READY,
 		FILL_REQUEST,
 		FILL_WAIT,

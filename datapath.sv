@@ -3,6 +3,7 @@ import cache_interface_types::*;
 
 module datapath # (
 	parameter CACHE_WORD_SIZE = 32,
+	localparam ADDR_SIZE = 32,
 	localparam CACHE_OFFSET_BITS = $clog2(CACHE_WORD_SIZE / 8)
 ) (
 	input logic clk_i,
@@ -30,6 +31,7 @@ module datapath # (
 	/* Inter-stage signals */
 	logic [31:0] wb_regfile_wr_data;
 	logic [31:0] ex_alu_out;
+	logic store_buffer_full;
 
 	/* Control unit */
 	control control_unit(
@@ -39,9 +41,9 @@ module datapath # (
 		.wb_reg_i(wb_reg),
 		.icache_hit_i(icache_bus.hit),
 		.dcache_hit_i(dcache_bus.hit),
+		.store_buffer_full_i(store_buffer_full),
 		.control_o(control),
-		.icache_access_o(icache_bus.access),
-		.dcache_access_o(dcache_bus.access)
+		.icache_access_o(icache_bus.access)
 	);
 
 	/* IF stage */
@@ -228,13 +230,45 @@ module datapath # (
 			mem_reg <= control.mem_reg_stall ? mem_reg : next_mem_reg;
 	end
 
-	assign dcache_bus.addr = mem_reg.alu_out;
-	assign dcache_bus.wr_data = mem_reg.regfile_out2;
-	assign dcache_bus.wr_size = mem_reg.dcache_wr_size;
-	assign dcache_bus.write = mem_reg.dcache_wr_enable;
-
 	logic [31:0] mem_dcache_rd_data_sext;
+	logic store_buffer_empty;
+	logic [ADDR_SIZE - 1 : 0] store_buffer_get_addr;
 
+	/* Cache input */
+	store_buffer # (
+		.NUM_ENTRIES(4),
+		.ADDR_SIZE(32),
+		.WORD_SIZE(CACHE_WORD_SIZE)
+	) store_buffer (
+		.clk_i(clk_i),
+		.reset_i(reset_i),
+		.put_addr_i(mem_reg.alu_out),
+		.put_data_i(mem_reg.regfile_out2),
+		.put_size_i(mem_reg.dcache_wr_size),
+		.put_enable_i(control.mem_sb_put_enable),
+		.get_addr_o(store_buffer_get_addr),
+		.get_data_o(dcache_bus.wr_data),
+		.get_size_o(dcache_bus.wr_size),
+		.get_enable_i(1'b1),
+		.full_o(store_buffer_full),
+		.empty_o(store_buffer_empty),
+		.dcache_hit_i(dcache_bus.hit)
+	);
+
+	/* Cache access mux: LOAD has priority over the store buffer. */
+	always_comb begin
+		if (control.mem_valid_load) begin
+			dcache_bus.addr = mem_reg.alu_out;
+			dcache_bus.write = 0;
+			dcache_bus.access = 1;
+		end else begin
+			dcache_bus.addr = store_buffer_get_addr;
+			dcache_bus.write = 1;
+			dcache_bus.access = !store_buffer_empty;
+		end
+	end
+
+	/* Cache output */
 	cache_sign_extend # (
 		.WORD_SIZE(CACHE_WORD_SIZE)
 	) dcache_sign_extend (

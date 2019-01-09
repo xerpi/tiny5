@@ -7,9 +7,9 @@ module control(
 	input pipeline_wb_reg_t wb_reg_i,
 	input logic icache_hit_i,
 	input logic dcache_hit_i,
+	input logic store_buffer_full_i,
 	output pipeline_control_t control_o,
-	output logic icache_access_o,
-	output logic dcache_access_o
+	output logic icache_access_o
 );
 	/* Check data hazards with the current instruction being decoded */
 	logic ex_data_hazard;
@@ -107,28 +107,51 @@ module control(
 	/* EX stage control signals */
 
 	/* MEM stage control signals */
-	logic dcache_busy;
+	logic is_mem_access_valid;
+	logic valid_load;
+	logic valid_store;
+	logic load_miss;
+	logic store_and_sb_full;
 
-	assign dcache_access_o = mem_reg_i.is_mem_access && mem_reg_i.valid;
-	assign dcache_busy = mem_reg_i.is_mem_access && mem_reg_i.valid &&
-			     !dcache_hit_i;
+	assign is_mem_access_valid = mem_reg_i.is_mem_access && mem_reg_i.valid;
+	assign valid_load = is_mem_access_valid && !mem_reg_i.dcache_wr_enable;
+	assign valid_store = is_mem_access_valid && mem_reg_i.dcache_wr_enable;
+
+	assign load_miss = valid_load && !dcache_hit_i;
+	assign store_and_sb_full = valid_store && store_buffer_full_i;
+
+	assign control_o.mem_valid_load = valid_load;
+	assign control_o.mem_sb_put_enable = valid_store && !store_buffer_full_i;
 
 	/* Pipeline interlock logic */
 	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||
 					icache_busy ||
-					dcache_busy;
+					load_miss ||
+					store_and_sb_full;
 
 	assign control_o.id_reg_stall = (data_hazard && !control_hazard) ||
-					dcache_busy;
+					load_miss ||
+					store_and_sb_full;
 	assign control_o.id_reg_valid = !control_hazard &&
 					!icache_busy;
 
-	assign control_o.ex_reg_stall = dcache_busy;
+	assign control_o.ex_reg_stall = load_miss ||
+					store_and_sb_full;
 	assign control_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
 
-	assign control_o.mem_reg_stall = dcache_busy ||
-					(icache_busy && control_hazard);
+	assign control_o.mem_reg_stall = load_miss ||
+					(icache_busy && control_hazard) ||
+					store_and_sb_full;
 	assign control_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
 
-	assign control_o.wb_reg_valid = mem_reg_i.valid && !dcache_busy;
+	assign control_o.wb_reg_valid = mem_reg_i.valid && !load_miss && !store_and_sb_full;
+
+	/* For RISC-V tests */
+	always_comb begin
+		if (wb_reg_i.valid && wb_reg_i.is_ecall) begin
+			$display("ECALL, x3: 0x%h, pc: 0x%h",
+				top.datapath.regfile.registers[3],
+				wb_reg_i.pc);
+		end
+	end
 endmodule

@@ -1,20 +1,21 @@
 [*]
-[*] GTKWave Analyzer v3.3.96 (w)1999-2018 BSI
-[*] Mon Nov  5 16:30:12 2018
+[*] GTKWave Analyzer v3.3.98 (w)1999-2019 BSI
+[*] Wed Jan  9 17:55:22 2019
 [*]
 [dumpfile] "/home/xerpi/Desktop/tiny5/tiny5/trace.fst"
-[dumpfile_mtime] "Mon Nov  5 16:30:05 2018"
-[dumpfile_size] 46988
+[dumpfile_mtime] "Wed Jan  9 17:52:50 2019"
+[dumpfile_size] 17602
 [savefile] "/home/xerpi/Desktop/tiny5/tiny5/trace.sav"
-[timestart] 0
+[timestart] 24
 [size] 1920 1025
 [pos] -1 -1
-*-2.000000 6 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.000000 30 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.datapath.
 [treeopen] TOP.top.datapath.control_unit.
 [treeopen] TOP.top.datapath.regfile.
+[treeopen] TOP.top.datapath.store_buffer.
 [sst_width] 275
 [signals_width] 389
 [sst_expanded] 1
@@ -64,6 +65,29 @@ TOP.top.datapath.control_unit.ex_alu_out_to_reg1_bypass
 @1000200
 -Bypasses
 @800200
+-Store buffer
+@22
+TOP.top.datapath.store_buffer.put_addr_i[31:0]
+TOP.top.datapath.store_buffer.put_data_i[31:0]
+TOP.top.datapath.store_buffer.put_size_i[1:0]
+@28
+TOP.top.datapath.store_buffer.put_enable_i
+@22
+TOP.top.datapath.store_buffer.head[1:0]
+TOP.top.datapath.store_buffer.tail[1:0]
+@28
+TOP.top.datapath.store_buffer.full
+TOP.top.datapath.store_buffer.empty
+@29
+TOP.top.datapath.store_buffer.advance
+@22
+TOP.top.datapath.store_buffer.entries(0)[65:0]
+TOP.top.datapath.store_buffer.entries(1)[65:0]
+TOP.top.datapath.store_buffer.entries(2)[65:0]
+TOP.top.datapath.store_buffer.entries(3)[65:0]
+@1000200
+-Store buffer
+@800200
 -CSR
 @22
 TOP.top.datapath.csr.reg_cycle[63:0]
@@ -71,13 +95,7 @@ TOP.top.datapath.csr.reg_instret[63:0]
 TOP.top.datapath.csr.reg_time[63:0]
 @1000200
 -CSR
-@28
-TOP.top.datapath.control_unit.icache_miss_i
-TOP.top.datapath.control_unit.icache_ready_i
-TOP.top.datapath.control_unit.dcache_miss_i
-TOP.top.datapath.control_unit.dcache_ready_i
-TOP.top.icache.state[2:0]
-@23
+@22
 TOP.top.memory_bus.rd_data[255:0]
 [pattern_trace] 1
 [pattern_trace] 0

@@ -314,18 +314,21 @@ typedef struct packed {
 	/* IF stage */
 	next_pc_sel_t next_pc_sel;
 	logic pc_reg_stall;
+	/* ID stage */
 	logic id_reg_stall;
 	logic id_reg_valid;
-	/* ID stage */
+	/* EX stage */
 	decode_out_t decode_out;
 	alu_out_bypass_from_t alu_out_to_reg1_bypass;
 	alu_out_bypass_from_t alu_out_to_reg2_bypass;
 	logic ex_reg_stall;
 	logic ex_reg_valid;
-	/* EX stage */
+	/* MEM stage */
 	logic mem_reg_stall;
 	logic mem_reg_valid;
-	/* MEM stage */
+	logic mem_sb_put_enable;
+	logic mem_valid_load;
+	/* WB stage */
 	logic wb_reg_valid;
 } pipeline_control_t;
 

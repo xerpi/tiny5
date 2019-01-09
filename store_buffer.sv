@@ -17,7 +17,8 @@ module store_buffer # (
 	output cache_access_size_t	 get_size_o,
 	input  logic			 get_enable_i,
 	output logic			 full_o,
-	output logic			 empty_o
+	output logic			 empty_o,
+	input  logic			 dcache_hit_i
 );
 	typedef struct packed {
 		logic [ADDR_SIZE - 1 : 0] addr;
@@ -38,7 +39,7 @@ module store_buffer # (
 
 	assign empty   = !full && (head == tail);
 	assign advance = !full && put_enable_i;
-	assign retreat = !empty && get_enable_i;
+	assign retreat = !empty && get_enable_i && dcache_hit_i;
 
 	/* I/O */
 	assign get_addr_o = entries[tail].addr;
@@ -68,7 +69,7 @@ module store_buffer # (
 		if (reset_i || retreat)
 			full <= 0;
 		else if (advance)
-			full <= head == tail;
+			full <= (head + 1) == tail;
 	end
 
 	/* Entry array registers */

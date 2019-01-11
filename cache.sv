@@ -60,8 +60,20 @@ module cache # (
 	assign hit = cur_line.valid && (cpu_addr.tag == cur_line.tag);
 	assign writeback_addr = {cur_line.tag, cpu_addr.index, {WORD_BITS + WOFF_BITS{1'b0}}};
 
-	assign cache_bus.rd_data = cur_line.data[cpu_addr.word];
 	assign cache_bus.hit = hit;
+
+	/* Cache read data */
+	always_comb begin
+		cache_bus.rd_data = 0;
+		priority case (cache_bus.rd_size)
+		CACHE_ACCESS_SIZE_BYTE:
+			cache_bus.rd_data[0 +: 8] = cur_line.data[cpu_addr.word][8 * cpu_addr.woff +: 8];
+		CACHE_ACCESS_SIZE_HALF:
+			cache_bus.rd_data[0 +: 16] = cur_line.data[cpu_addr.word][8 * cpu_addr.woff +: 16];
+		CACHE_ACCESS_SIZE_WORD:
+			cache_bus.rd_data = cur_line.data[cpu_addr.word];
+		endcase
+	end
 
 	/* FSM next state logic */
 	always_comb begin
@@ -145,10 +157,10 @@ module cache # (
 			priority case (cache_bus.wr_size)
 			CACHE_ACCESS_SIZE_BYTE:
 				next_line.data[cpu_addr.word]
-					      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[7:0];
+					      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[0 +: 8];
 			CACHE_ACCESS_SIZE_HALF:
 				next_line.data[cpu_addr.word]
-					      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[15:0];
+					      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[0 +: 16];
 			CACHE_ACCESS_SIZE_WORD:
 				next_line.data[cpu_addr.word] = cache_bus.wr_data;
 			endcase
@@ -162,10 +174,10 @@ module cache # (
 				priority case (cache_bus.wr_size)
 				CACHE_ACCESS_SIZE_BYTE:
 					next_line.data[cpu_addr.word]
-						      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[7:0];
+						      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[0 +: 8];
 				CACHE_ACCESS_SIZE_HALF:
 					next_line.data[cpu_addr.word]
-						      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[15:0];
+						      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[0 +: 16];
 				CACHE_ACCESS_SIZE_WORD:
 					next_line.data[cpu_addr.word] = cache_bus.wr_data;
 				endcase

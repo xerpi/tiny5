@@ -63,6 +63,7 @@ module datapath # (
 	end
 
 	assign icache_bus.addr = pc;
+	assign icache_bus.rd_size = CACHE_ACCESS_SIZE_WORD;
 	assign icache_bus.wr_data = 0; /* don't care */
 	assign icache_bus.wr_size = CACHE_ACCESS_SIZE_WORD; /* don't care */
 	assign icache_bus.write = 0;
@@ -243,6 +244,8 @@ module datapath # (
 	logic [WORD_SIZE - 1 : 0] store_buffer_snoop_data;
 	logic [WORD_SIZE - 1 : 0] cache_sign_extend_data_in;
 
+	assign dcache_bus.rd_size = mem_reg.dcache_rd_size;
+
 	/* Store buffer (cache input) */
 	store_buffer # (
 		.NUM_ENTRIES(4),
@@ -292,7 +295,6 @@ module datapath # (
 		.WORD_SIZE(WORD_SIZE)
 	) dcache_sign_extend (
 		.data_in(cache_sign_extend_data_in),
-		.offset(mem_reg.alu_out[0 +: CACHE_OFFSET_BITS]),
 		.is_signed(mem_reg.dcache_rd_signed),
 		.size(mem_reg.dcache_rd_size),
 		.data_out(mem_dcache_rd_data_sext)

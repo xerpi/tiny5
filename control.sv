@@ -114,6 +114,7 @@ module control(
 	logic valid_load;
 	logic valid_store;
 	logic load_cache_miss;
+	logic load_cache_miss_sb_miss;
 	logic load_and_sb_line_conflict;
 	logic store_and_sb_full;
 	logic store_buffer_drain;
@@ -127,8 +128,8 @@ module control(
 	assign load_and_sb_line_conflict = valid_load && store_buffer_snoop_line_conflict_i;
 	assign load_cache_miss_sb_miss = load_cache_miss && !store_buffer_snoop_hit_i;
 	assign store_and_sb_full = valid_store && store_buffer_full_i;
-	assign store_buffer_drain = (!valid_load || store_buffer_snoop_line_conflict_i) &&
-				    !store_buffer_empty_i;
+	assign store_buffer_drain = (!valid_load && !store_buffer_empty_i) ||
+				    (valid_load && store_buffer_snoop_line_conflict_i);
 
 	assign control_o.mem_valid_load = valid_load;
 	assign control_o.mem_sb_put_enable = valid_store && !store_buffer_full_i;

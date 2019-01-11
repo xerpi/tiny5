@@ -40,6 +40,11 @@ add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_hit_o
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_line_conflict_o
 
+add wave -radix 16 -expand -group {Dcache sign extend} sim:/top/datapath/dcache_sign_extend/data_in
+add wave -radix 16 -expand -group {Dcache sign extend} sim:/top/datapath/dcache_sign_extend/is_signed
+add wave -radix 16 -expand -group {Dcache sign extend} sim:/top/datapath/dcache_sign_extend/size
+add wave -radix 16 -expand -group {Dcache sign extend} sim:/top/datapath/dcache_sign_extend/data_out
+
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.addr
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.rd_data
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.access

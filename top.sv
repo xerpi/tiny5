@@ -6,24 +6,24 @@ module top(
 );
 	localparam MEMORY_SIZE = 64 * 1024 * 8;
 	localparam MEMORY_DELAY_CYCLES = 5;
-	localparam CACHE_SIE = 4 * 1024 * 8;
-	localparam LINE_SIZE = 32 * 8;
+	localparam CACHE_SIZE = 4 * 1024 * 8;
+	localparam CACHE_LINE_SIZE = 32 * 8;
 	localparam WORD_SIZE = 32;
 	localparam ADDR_SIZE = 32;
 
 	memory_interface # (
 		.ADDR_SIZE(ADDR_SIZE),
-		.LINE_SIZE(LINE_SIZE)
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE)
 	) memory_bus ();
 
 	memory_interface # (
 		.ADDR_SIZE(ADDR_SIZE),
-		.LINE_SIZE(LINE_SIZE)
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE)
 	) icache_memory_bus ();
 
 	memory_interface # (
 		.ADDR_SIZE(ADDR_SIZE),
-		.LINE_SIZE(LINE_SIZE)
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE)
 	) dcache_memory_bus ();
 
 	cache_interface # (
@@ -46,7 +46,7 @@ module top(
 
 	memory # (
 		.SIZE(MEMORY_SIZE),
-		.LINE_SIZE(LINE_SIZE),
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE),
 		.ADDR_SIZE(ADDR_SIZE),
 		.DELAY_CYCLES(MEMORY_DELAY_CYCLES)
 	) memory (
@@ -56,8 +56,8 @@ module top(
 	);
 
 	cache # (
-		.SIZE(CACHE_SIE),
-		.LINE_SIZE(LINE_SIZE),
+		.SIZE(CACHE_SIZE),
+		.LINE_SIZE(CACHE_LINE_SIZE),
 		.WORD_SIZE(WORD_SIZE),
 		.ADDR_SIZE(ADDR_SIZE)
 	) icache (
@@ -68,8 +68,8 @@ module top(
 	);
 
 	cache # (
-		.SIZE(CACHE_SIE),
-		.LINE_SIZE(LINE_SIZE),
+		.SIZE(CACHE_SIZE),
+		.LINE_SIZE(CACHE_LINE_SIZE),
 		.WORD_SIZE(WORD_SIZE),
 		.ADDR_SIZE(ADDR_SIZE)
 	) dcache (
@@ -80,7 +80,10 @@ module top(
 	);
 
 	datapath # (
-		.CACHE_WORD_SIZE(WORD_SIZE)
+		.ADDR_SIZE(ADDR_SIZE),
+		.WORD_SIZE(WORD_SIZE),
+		.CACHE_SIZE(CACHE_SIZE),
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE)
 	) datapath (
 		.clk_i(clk_i),
 		.reset_i(reset_i),

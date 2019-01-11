@@ -13,6 +13,10 @@ add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/regfile/registers
 
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/control_o
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/icache_busy
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/valid_load
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/load_cache_miss
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/load_and_sb_line_conflict
+add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/store_buffer_drain
 
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/put_addr_i
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/put_data_i
@@ -29,6 +33,12 @@ add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/get_size_o
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/get_enable_i
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/entries
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/dcache_hit_i
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_addr_i
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_data_o
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_size_i
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_hit_o
+add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/snoop_line_conflict_o
 
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.addr
 add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.rd_data

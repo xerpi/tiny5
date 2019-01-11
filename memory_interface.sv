@@ -1,10 +1,10 @@
 interface memory_interface # (
 	parameter ADDR_SIZE = 32,
-	parameter LINE_SIZE = 32 * 8
+	parameter CACHE_LINE_SIZE = 32 * 8
 ) ();
 	logic [ADDR_SIZE - 1 : 0] addr;
-	logic [LINE_SIZE - 1 : 0] rd_data;
-	logic [LINE_SIZE - 1 : 0] wr_data;
+	logic [CACHE_LINE_SIZE - 1 : 0] rd_data;
+	logic [CACHE_LINE_SIZE - 1 : 0] wr_data;
 	logic write;
 	logic valid;
 	logic ready;

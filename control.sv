@@ -8,6 +8,9 @@ module control(
 	input logic icache_hit_i,
 	input logic dcache_hit_i,
 	input logic store_buffer_full_i,
+	input logic store_buffer_empty_i,
+	input logic store_buffer_snoop_hit_i,
+	input logic store_buffer_snoop_line_conflict_i,
 	output pipeline_control_t control_o,
 	output logic icache_access_o
 );
@@ -107,44 +110,60 @@ module control(
 	/* EX stage control signals */
 
 	/* MEM stage control signals */
-	logic is_mem_access_valid;
+	logic valid_mem_access;
 	logic valid_load;
 	logic valid_store;
-	logic load_miss;
+	logic load_cache_miss;
+	logic load_and_sb_line_conflict;
 	logic store_and_sb_full;
+	logic store_buffer_drain;
 
-	assign is_mem_access_valid = mem_reg_i.is_mem_access && mem_reg_i.valid;
-	assign valid_load = is_mem_access_valid && !mem_reg_i.dcache_wr_enable;
-	assign valid_store = is_mem_access_valid && mem_reg_i.dcache_wr_enable;
+	assign valid_mem_access = mem_reg_i.is_mem_access && mem_reg_i.valid;
+	assign valid_load = valid_mem_access && !mem_reg_i.dcache_wr_enable;
+	assign valid_store = valid_mem_access && mem_reg_i.dcache_wr_enable;
+	assign load_cache_miss = valid_load && !dcache_hit_i;
 
-	assign load_miss = valid_load && !dcache_hit_i;
+	/* Store buffer lock/drain logic */
+	assign load_and_sb_line_conflict = valid_load && store_buffer_snoop_line_conflict_i;
+	assign load_cache_miss_sb_miss = load_cache_miss && !store_buffer_snoop_hit_i;
 	assign store_and_sb_full = valid_store && store_buffer_full_i;
+	assign store_buffer_drain = (!valid_load || store_buffer_snoop_line_conflict_i) &&
+				    !store_buffer_empty_i;
 
 	assign control_o.mem_valid_load = valid_load;
 	assign control_o.mem_sb_put_enable = valid_store && !store_buffer_full_i;
+	assign control_o.mem_sb_get_enable = store_buffer_drain;
+	assign control_o.mem_use_sb_snoop_data = store_buffer_snoop_hit_i;
 
 	/* Pipeline interlock logic */
 	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||
 					icache_busy ||
-					load_miss ||
+					load_and_sb_line_conflict ||
+					load_cache_miss_sb_miss ||
 					store_and_sb_full;
 
 	assign control_o.id_reg_stall = (data_hazard && !control_hazard) ||
-					load_miss ||
+					load_and_sb_line_conflict ||
+					load_cache_miss_sb_miss ||
 					store_and_sb_full;
 	assign control_o.id_reg_valid = !control_hazard &&
 					!icache_busy;
 
-	assign control_o.ex_reg_stall = load_miss ||
+	assign control_o.ex_reg_stall = load_and_sb_line_conflict ||
+					load_cache_miss_sb_miss ||
 					store_and_sb_full;
 	assign control_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
 
-	assign control_o.mem_reg_stall = load_miss ||
-					(icache_busy && control_hazard) ||
-					store_and_sb_full;
+	assign control_o.mem_reg_stall = load_and_sb_line_conflict ||
+					 load_cache_miss_sb_miss ||
+					 (icache_busy && control_hazard) ||
+					 store_and_sb_full;
 	assign control_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
 
-	assign control_o.wb_reg_valid = mem_reg_i.valid && !load_miss && !store_and_sb_full;
+	assign control_o.wb_reg_valid = mem_reg_i.valid &&
+					!load_and_sb_line_conflict &&
+					!load_cache_miss_sb_miss &&
+					!store_and_sb_full;
 
 	/* For RISC-V tests */
 	always_comb begin

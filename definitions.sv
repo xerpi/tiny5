@@ -327,7 +327,9 @@ typedef struct packed {
 	logic mem_reg_stall;
 	logic mem_reg_valid;
 	logic mem_sb_put_enable;
+	logic mem_sb_get_enable;
 	logic mem_valid_load;
+	logic mem_use_sb_snoop_data;
 	/* WB stage */
 	logic wb_reg_valid;
 } pipeline_control_t;

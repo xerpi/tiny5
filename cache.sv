@@ -158,6 +158,18 @@ module cache # (
 		end
 		FILL_WAIT: begin
 			next_line.data = memory_bus.rd_data;
+			if (cache_bus.access && cache_bus.write) begin
+				priority case (cache_bus.wr_size)
+				CACHE_ACCESS_SIZE_BYTE:
+					next_line.data[cpu_addr.word]
+						      [8 * cpu_addr.woff +: 8] = cache_bus.wr_data[7:0];
+				CACHE_ACCESS_SIZE_HALF:
+					next_line.data[cpu_addr.word]
+						      [8 * cpu_addr.woff +: 16] = cache_bus.wr_data[15:0];
+				CACHE_ACCESS_SIZE_WORD:
+					next_line.data[cpu_addr.word] = cache_bus.wr_data;
+				endcase
+			end
 			next_line.tag = cpu_addr.tag;
 			next_line.valid = 1;
 			next_line.dirty = 0;

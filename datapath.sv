@@ -2,9 +2,11 @@ import definitions::*;
 import cache_interface_types::*;
 
 module datapath # (
-	parameter CACHE_WORD_SIZE = 32,
-	localparam ADDR_SIZE = 32,
-	localparam CACHE_OFFSET_BITS = $clog2(CACHE_WORD_SIZE / 8)
+	parameter ADDR_SIZE = 32,
+	parameter WORD_SIZE = 32,
+	parameter CACHE_SIZE = 4 * 1024 * 8,
+	parameter CACHE_LINE_SIZE = 32 * 8,
+	localparam CACHE_OFFSET_BITS = $clog2(WORD_SIZE / 8)
 ) (
 	input logic clk_i,
 	input logic reset_i,
@@ -32,6 +34,9 @@ module datapath # (
 	logic [31:0] wb_regfile_wr_data;
 	logic [31:0] ex_alu_out;
 	logic store_buffer_full;
+	logic store_buffer_empty;
+	logic store_buffer_snoop_hit;
+	logic store_buffer_snoop_line_conflict;
 
 	/* Control unit */
 	control control_unit(
@@ -42,6 +47,9 @@ module datapath # (
 		.icache_hit_i(icache_bus.hit),
 		.dcache_hit_i(dcache_bus.hit),
 		.store_buffer_full_i(store_buffer_full),
+		.store_buffer_empty_i(store_buffer_empty),
+		.store_buffer_snoop_hit_i(store_buffer_snoop_hit),
+		.store_buffer_snoop_line_conflict_i(store_buffer_snoop_line_conflict),
 		.control_o(control),
 		.icache_access_o(icache_bus.access)
 	);
@@ -230,15 +238,18 @@ module datapath # (
 			mem_reg <= control.mem_reg_stall ? mem_reg : next_mem_reg;
 	end
 
-	logic [31:0] mem_dcache_rd_data_sext;
-	logic store_buffer_empty;
+	logic [WORD_SIZE - 1 : 0] mem_dcache_rd_data_sext;
 	logic [ADDR_SIZE - 1 : 0] store_buffer_get_addr;
+	logic [WORD_SIZE - 1 : 0] store_buffer_snoop_data;
+	logic [WORD_SIZE - 1 : 0] cache_sign_extend_data_in;
 
-	/* Cache input */
+	/* Store buffer (cache input) */
 	store_buffer # (
 		.NUM_ENTRIES(4),
-		.ADDR_SIZE(32),
-		.WORD_SIZE(CACHE_WORD_SIZE)
+		.ADDR_SIZE(ADDR_SIZE),
+		.WORD_SIZE(WORD_SIZE),
+		.CACHE_SIZE(CACHE_SIZE),
+		.CACHE_LINE_SIZE(CACHE_LINE_SIZE)
 	) store_buffer (
 		.clk_i(clk_i),
 		.reset_i(reset_i),
@@ -249,30 +260,38 @@ module datapath # (
 		.get_addr_o(store_buffer_get_addr),
 		.get_data_o(dcache_bus.wr_data),
 		.get_size_o(dcache_bus.wr_size),
-		.get_enable_i(1'b1),
+		.get_enable_i(control.mem_sb_get_enable),
 		.full_o(store_buffer_full),
 		.empty_o(store_buffer_empty),
-		.dcache_hit_i(dcache_bus.hit)
+		.dcache_hit_i(dcache_bus.hit),
+		.snoop_addr_i(mem_reg.alu_out),
+		.snoop_data_o(store_buffer_snoop_data),
+		.snoop_size_i(mem_reg.dcache_rd_size),
+		.snoop_hit_o(store_buffer_snoop_hit),
+		.snoop_line_conflict_o(store_buffer_snoop_line_conflict)
 	);
 
 	/* Cache access mux: LOAD has priority over the store buffer. */
 	always_comb begin
-		if (control.mem_valid_load) begin
-			dcache_bus.addr = mem_reg.alu_out;
-			dcache_bus.write = 0;
-			dcache_bus.access = 1;
-		end else begin
+		if (control.mem_sb_get_enable) begin
 			dcache_bus.addr = store_buffer_get_addr;
 			dcache_bus.write = 1;
-			dcache_bus.access = !store_buffer_empty;
+			dcache_bus.access = 1;
+		end else begin
+			dcache_bus.addr = mem_reg.alu_out;
+			dcache_bus.write = 0;
+			dcache_bus.access = control.mem_valid_load;
 		end
 	end
 
+	assign cache_sign_extend_data_in = control.mem_use_sb_snoop_data ?
+		store_buffer_snoop_data : dcache_bus.rd_data;
+
 	/* Cache output */
 	cache_sign_extend # (
-		.WORD_SIZE(CACHE_WORD_SIZE)
+		.WORD_SIZE(WORD_SIZE)
 	) dcache_sign_extend (
-		.data_in(dcache_bus.rd_data),
+		.data_in(cache_sign_extend_data_in),
 		.offset(mem_reg.alu_out[0 +: CACHE_OFFSET_BITS]),
 		.is_signed(mem_reg.dcache_rd_signed),
 		.size(mem_reg.dcache_rd_size),

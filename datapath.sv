@@ -19,6 +19,12 @@ module datapath # (
 	pipeline_ex_reg_t ex_reg;
 	pipeline_mem_reg_t mem_reg;
 	pipeline_wb_reg_t wb_reg;
+	pipeline_mul_m01234_reg_t mul_m0_reg;
+	pipeline_mul_m01234_reg_t mul_m1_reg;
+	pipeline_mul_m01234_reg_t mul_m2_reg;
+	pipeline_mul_m01234_reg_t mul_m3_reg;
+	pipeline_mul_m01234_reg_t mul_m4_reg;
+	pipeline_mul_wmul_reg_t mul_wmul_reg;
 
 	/* Pipeline next state signals */
 	logic [31:0] next_pc;
@@ -26,6 +32,12 @@ module datapath # (
 	pipeline_ex_reg_t next_ex_reg;
 	pipeline_mem_reg_t next_mem_reg;
 	pipeline_wb_reg_t next_wb_reg;
+	pipeline_mul_m01234_reg_t next_mul_m0_reg;
+	pipeline_mul_m01234_reg_t next_mul_m1_reg;
+	pipeline_mul_m01234_reg_t next_mul_m2_reg;
+	pipeline_mul_m01234_reg_t next_mul_m3_reg;
+	pipeline_mul_m01234_reg_t next_mul_m4_reg;
+	pipeline_mul_wmul_reg_t next_mul_wmul_reg;
 
 	/* Pipeline control signal */
 	pipeline_control_t control;
@@ -44,6 +56,12 @@ module datapath # (
 		.ex_reg_i(ex_reg),
 		.mem_reg_i(mem_reg),
 		.wb_reg_i(wb_reg),
+		.mul_m0_reg_i(mul_m0_reg),
+		.mul_m1_reg_i(mul_m1_reg),
+		.mul_m2_reg_i(mul_m2_reg),
+		.mul_m3_reg_i(mul_m3_reg),
+		.mul_m4_reg_i(mul_m4_reg),
+		.mul_wmul_reg_i(mul_wmul_reg),
 		.icache_hit_i(icache_bus.hit),
 		.dcache_hit_i(dcache_bus.hit),
 		.store_buffer_full_i(store_buffer_full),
@@ -331,5 +349,77 @@ module datapath # (
 		REGFILE_WR_SEL_CSR_OUT:
 			wb_regfile_wr_data = wb_reg.csr_out;
 		endcase
+	end
+
+	/* Multiply M0 stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_m0_reg <= 'b0;
+		else
+			mul_m0_reg <= control.mul_m0_reg_stall ? mul_m0_reg : next_mul_m0_reg;
+	end
+
+	assign next_mul_m1_reg.op1 = mul_m0_reg.op1;
+	assign next_mul_m1_reg.op2 = mul_m0_reg.op2;
+	assign next_mul_m1_reg.regfile_wr_addr = mul_m0_reg.regfile_wr_addr;
+	assign next_mul_m1_reg.valid = mul_m0_reg.valid;
+
+	/* Multiply M1 stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_m1_reg <= 'b0;
+		else
+			mul_m1_reg <= control.mul_m1_reg_stall ? mul_m1_reg : next_mul_m1_reg;
+	end
+
+	assign next_mul_m2_reg.op1 = mul_m1_reg.op1;
+	assign next_mul_m2_reg.op2 = mul_m1_reg.op2;
+	assign next_mul_m2_reg.regfile_wr_addr = mul_m1_reg.regfile_wr_addr;
+	assign next_mul_m2_reg.valid = mul_m1_reg.valid;
+
+	/* Multiply M2 stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_m2_reg <= 'b0;
+		else
+			mul_m2_reg <= control.mul_m2_reg_stall ? mul_m2_reg : next_mul_m2_reg;
+	end
+
+	assign next_mul_m3_reg.op1 = mul_m2_reg.op1;
+	assign next_mul_m3_reg.op2 = mul_m2_reg.op2;
+	assign next_mul_m3_reg.regfile_wr_addr = mul_m2_reg.regfile_wr_addr;
+	assign next_mul_m3_reg.valid = mul_m2_reg.valid;
+
+	/* Multiply M3 stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_m3_reg <= 'b0;
+		else
+			mul_m3_reg <= control.mul_m3_reg_stall ? mul_m3_reg : next_mul_m3_reg;
+	end
+
+	assign next_mul_m4_reg.op1 = mul_m3_reg.op1;
+	assign next_mul_m4_reg.op2 = mul_m3_reg.op2;
+	assign next_mul_m4_reg.regfile_wr_addr = mul_m3_reg.regfile_wr_addr;
+	assign next_mul_m4_reg.valid = mul_m3_reg.valid;
+
+	/* Multiply M4 stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_m4_reg <= 'b0;
+		else
+			mul_m4_reg <= control.mul_m4_reg_stall ? mul_m4_reg : next_mul_m4_reg;
+	end
+
+	assign next_mul_wmul_reg.result = mul_m4_reg.op1 * mul_m4_reg.op2;
+	assign next_mul_wmul_reg.regfile_wr_addr = mul_m3_reg.regfile_wr_addr;
+	assign next_mul_wmul_reg.valid = mul_m3_reg.valid;
+
+	/* Multiply Writeback stage */
+	always_ff @(posedge clk_i) begin
+		if (reset_i)
+			mul_wmul_reg <= 'b0;
+		else
+			mul_wmul_reg <= next_mul_wmul_reg;
 	end
 endmodule

@@ -283,6 +283,19 @@ typedef struct packed {
 	logic valid;
 } pipeline_wb_reg_t;
 
+typedef struct packed {
+	logic [31:0] op1;
+	logic [31:0] op2;
+	logic [4:0] regfile_wr_addr;
+	logic valid;
+} pipeline_mul_m01234_reg_t;
+
+typedef struct packed {
+	logic [31:0] result;
+	logic [4:0] regfile_wr_addr;
+	logic valid;
+} pipeline_mul_wmul_reg_t;
+
 /* Pipeline decode and control signals */
 
 typedef struct packed {
@@ -332,6 +345,16 @@ typedef struct packed {
 	logic mem_use_sb_snoop_data;
 	/* WB stage */
 	logic wb_reg_valid;
+	/* MUL_M0 stage */
+	logic mul_m0_reg_stall;
+	/* MUL_M1 stage */
+	logic mul_m1_reg_stall;
+	/* MUL_M2 stage */
+	logic mul_m2_reg_stall;
+	/* MUL_M3 stage */
+	logic mul_m3_reg_stall;
+	/* MUL_M4 stage */
+	logic mul_m4_reg_stall;
 } pipeline_control_t;
 
 /* Helper functions */

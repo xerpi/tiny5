@@ -9,6 +9,12 @@ add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/id_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/ex_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mem_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/wb_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_m0_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_m1_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_m2_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_m3_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_m4_reg
+add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/mul_wmul_reg
 add wave -radix 16 -expand -group {Datapath} sim:/top/datapath/regfile/registers
 
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/control_o
@@ -17,6 +23,11 @@ add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/valid
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/load_cache_miss
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/load_and_sb_line_conflict
 add wave -radix 16 -expand -group {Control} sim:/top/datapath/control_unit/store_buffer_drain
+
+add wave -radix 16 -expand -group {Muldiv} sim:/top/datapath/muldiv/muldiv_op_i
+add wave -radix 16 -expand -group {Muldiv} sim:/top/datapath/muldiv/in1_i
+add wave -radix 16 -expand -group {Muldiv} sim:/top/datapath/muldiv/in2_i
+add wave -radix 16 -expand -group {Muldiv} sim:/top/datapath/muldiv/out_o
 
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/put_addr_i
 add wave -radix 16 -expand -group {Store buffer} sim:/top/datapath/store_buffer/put_data_i

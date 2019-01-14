@@ -5,11 +5,11 @@ module control(
 	input pipeline_ex_reg_t ex_reg_i,
 	input pipeline_mem_reg_t mem_reg_i,
 	input pipeline_wb_reg_t wb_reg_i,
-	input pipeline_mul_m01234_reg_t mul_m0_reg_i,
-	input pipeline_mul_m01234_reg_t mul_m1_reg_i,
-	input pipeline_mul_m01234_reg_t mul_m2_reg_i,
-	input pipeline_mul_m01234_reg_t mul_m3_reg_i,
-	input pipeline_mul_m01234_reg_t mul_m4_reg_i,
+	input pipeline_mul_m0_reg_t mul_m0_reg_i,
+	input pipeline_mul_m1234_reg_t mul_m1_reg_i,
+	input pipeline_mul_m1234_reg_t mul_m2_reg_i,
+	input pipeline_mul_m1234_reg_t mul_m3_reg_i,
+	input pipeline_mul_m1234_reg_t mul_m4_reg_i,
 	input pipeline_mul_wmul_reg_t mul_wmul_reg_i,
 	input logic icache_hit_i,
 	input logic dcache_hit_i,
@@ -143,34 +143,44 @@ module control(
 	assign control_o.mem_use_sb_snoop_data = store_buffer_snoop_hit_i;
 
 	/* Pipeline interlock logic */
+	logic stall_full_pipeline;
+
+	assign stall_full_pipeline = load_and_sb_line_conflict ||
+				     load_cache_miss_sb_miss ||
+				     store_and_sb_full;
+
 	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||
 					icache_busy ||
-					load_and_sb_line_conflict ||
-					load_cache_miss_sb_miss ||
-					store_and_sb_full;
+					stall_full_pipeline;
 
 	assign control_o.id_reg_stall = (data_hazard && !control_hazard) ||
-					load_and_sb_line_conflict ||
-					load_cache_miss_sb_miss ||
-					store_and_sb_full;
+					stall_full_pipeline;
 	assign control_o.id_reg_valid = !control_hazard &&
 					!icache_busy;
 
-	assign control_o.ex_reg_stall = load_and_sb_line_conflict ||
-					load_cache_miss_sb_miss ||
-					store_and_sb_full;
-	assign control_o.ex_reg_valid = id_reg_i.valid && !data_hazard && !control_hazard;
+	assign control_o.ex_reg_stall = stall_full_pipeline;
+	assign control_o.ex_reg_valid = id_reg_i.valid &&
+					!data_hazard && !control_hazard &&
+					!control_o.decode_out.is_muldiv;
 
-	assign control_o.mem_reg_stall = load_and_sb_line_conflict ||
-					 load_cache_miss_sb_miss ||
-					 (icache_busy && control_hazard) ||
-					 store_and_sb_full;
+	assign control_o.mem_reg_stall = stall_full_pipeline ||
+					 (icache_busy && control_hazard);
 	assign control_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
 
-	assign control_o.wb_reg_valid = mem_reg_i.valid &&
-					!load_and_sb_line_conflict &&
-					!load_cache_miss_sb_miss &&
-					!store_and_sb_full;
+	assign control_o.wb_reg_valid = mem_reg_i.valid && !stall_full_pipeline;
+
+	assign control_o.mul_m0_reg_stall = stall_full_pipeline;
+	assign control_o.mul_m0_reg_valid = id_reg_i.valid &&
+					!data_hazard && !control_hazard &&
+					control_o.decode_out.is_muldiv;
+
+	assign control_o.mul_m1_reg_stall = stall_full_pipeline;
+
+	assign control_o.mul_m2_reg_stall = stall_full_pipeline;
+
+	assign control_o.mul_m3_reg_stall = stall_full_pipeline;
+
+	assign control_o.mul_m4_reg_stall = stall_full_pipeline;
 
 	/* For RISC-V tests */
 	always_comb begin

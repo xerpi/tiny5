@@ -14,6 +14,10 @@ module decode(
 		decode_o.is_jump = 0;
 		decode_o.is_ecall = 0;
 		decode_o.is_mem_access = 0;
+		decode_o.is_muldiv = 0;
+
+		/* Fixed values */
+		decode_o.muldiv_op = funct3_op_muldiv_t'(instr_i.rtype.funct3);
 
 		/* Default don't care values */
 		decode_o.alu_op = ALU_OP_IN1_PASSTHROUGH;
@@ -143,35 +147,39 @@ module decode(
 		end
 		OPCODE_OP: begin
 			decode_o.regfile_we = 1;
-			decode_o.regfile_wr_sel = REGFILE_WR_SEL_ALU_OUT;
-			decode_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
-			decode_o.alu_in2_sel = ALU_IN2_SEL_REGFILE_OUT2;
+			if (instr_i.rtype.funct7 == FUNCT7_OP_MULDIV) begin
+				decode_o.is_muldiv = 1;
+			end else begin
+				decode_o.regfile_wr_sel = REGFILE_WR_SEL_ALU_OUT;
+				decode_o.alu_in1_sel = ALU_IN1_SEL_REGFILE_OUT1;
+				decode_o.alu_in2_sel = ALU_IN2_SEL_REGFILE_OUT2;
 
-			priority case (instr_i.rtype.funct3)
-			FUNCT3_OP_ADD_SUB: begin
-				if (instr_i.rtype.funct7[5])
-					decode_o.alu_op = ALU_OP_SUB;
-				else
-					decode_o.alu_op = ALU_OP_ADD;
+				priority case (instr_i.rtype.funct3)
+				FUNCT3_OP_ADD_SUB: begin
+					if (instr_i.rtype.funct7[5])
+						decode_o.alu_op = ALU_OP_SUB;
+					else
+						decode_o.alu_op = ALU_OP_ADD;
+				end
+				FUNCT3_OP_SLL:
+					decode_o.alu_op = ALU_OP_SLL;
+				FUNCT3_OP_SLT:
+					decode_o.alu_op = ALU_OP_SLT;
+				FUNCT3_OP_SLTU:
+					decode_o.alu_op = ALU_OP_SLTU;
+				FUNCT3_OP_XOR:
+					decode_o.alu_op = ALU_OP_XOR;
+				FUNCT3_OP_SR:
+					if (instr_i.rtype.funct7[5])
+						decode_o.alu_op = ALU_OP_SRA;
+					else
+						decode_o.alu_op = ALU_OP_SRL;
+				FUNCT3_OP_OR:
+					decode_o.alu_op = ALU_OP_OR;
+				FUNCT3_OP_AND:
+					decode_o.alu_op = ALU_OP_AND;
+				endcase
 			end
-			FUNCT3_OP_SLL:
-				decode_o.alu_op = ALU_OP_SLL;
-			FUNCT3_OP_SLT:
-				decode_o.alu_op = ALU_OP_SLT;
-			FUNCT3_OP_SLTU:
-				decode_o.alu_op = ALU_OP_SLTU;
-			FUNCT3_OP_XOR:
-				decode_o.alu_op = ALU_OP_XOR;
-			FUNCT3_OP_SR:
-				if (instr_i.rtype.funct7[5])
-					decode_o.alu_op = ALU_OP_SRA;
-				else
-					decode_o.alu_op = ALU_OP_SRL;
-			FUNCT3_OP_OR:
-				decode_o.alu_op = ALU_OP_OR;
-			FUNCT3_OP_AND:
-				decode_o.alu_op = ALU_OP_AND;
-			endcase
 		end
 		OPCODE_MISC_MEM: begin
 			priority case (instr_i.itype.funct3)

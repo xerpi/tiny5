@@ -19,11 +19,11 @@ module datapath # (
 	pipeline_ex_reg_t ex_reg;
 	pipeline_mem_reg_t mem_reg;
 	pipeline_wb_reg_t wb_reg;
-	pipeline_mul_m01234_reg_t mul_m0_reg;
-	pipeline_mul_m01234_reg_t mul_m1_reg;
-	pipeline_mul_m01234_reg_t mul_m2_reg;
-	pipeline_mul_m01234_reg_t mul_m3_reg;
-	pipeline_mul_m01234_reg_t mul_m4_reg;
+	pipeline_mul_m0_reg_t mul_m0_reg;
+	pipeline_mul_m1234_reg_t mul_m1_reg;
+	pipeline_mul_m1234_reg_t mul_m2_reg;
+	pipeline_mul_m1234_reg_t mul_m3_reg;
+	pipeline_mul_m1234_reg_t mul_m4_reg;
 	pipeline_mul_wmul_reg_t mul_wmul_reg;
 
 	/* Pipeline next state signals */
@@ -32,11 +32,11 @@ module datapath # (
 	pipeline_ex_reg_t next_ex_reg;
 	pipeline_mem_reg_t next_mem_reg;
 	pipeline_wb_reg_t next_wb_reg;
-	pipeline_mul_m01234_reg_t next_mul_m0_reg;
-	pipeline_mul_m01234_reg_t next_mul_m1_reg;
-	pipeline_mul_m01234_reg_t next_mul_m2_reg;
-	pipeline_mul_m01234_reg_t next_mul_m3_reg;
-	pipeline_mul_m01234_reg_t next_mul_m4_reg;
+	pipeline_mul_m0_reg_t next_mul_m0_reg;
+	pipeline_mul_m1234_reg_t next_mul_m1_reg;
+	pipeline_mul_m1234_reg_t next_mul_m2_reg;
+	pipeline_mul_m1234_reg_t next_mul_m3_reg;
+	pipeline_mul_m1234_reg_t next_mul_m4_reg;
 	pipeline_mul_wmul_reg_t next_mul_wmul_reg;
 
 	/* Pipeline control signal */
@@ -109,6 +109,8 @@ module datapath # (
 
 	logic [31:0] id_regfile_out1;
 	logic [31:0] id_regfile_out2;
+	logic [31:0] id_regfile_out1_bypass;
+	logic [31:0] id_regfile_out2_bypass;
 
 	regfile regfile(
 		.clk_i(clk_i),
@@ -143,29 +145,31 @@ module datapath # (
 	always_comb begin
 		priority case (control.alu_out_to_reg1_bypass)
 		ALU_OUT_BYPASS_FROM_NONE:
-			next_ex_reg.regfile_out1 = id_regfile_out1;
+			id_regfile_out1_bypass = id_regfile_out1;
 		ALU_OUT_BYPASS_FROM_EX:
-			next_ex_reg.regfile_out1 = ex_alu_out;
+			id_regfile_out1_bypass = ex_alu_out;
 		ALU_OUT_BYPASS_FROM_MEM:
-			next_ex_reg.regfile_out1 = mem_reg.alu_out;
+			id_regfile_out1_bypass = mem_reg.alu_out;
 		ALU_OUT_BYPASS_FROM_WB:
-			next_ex_reg.regfile_out1 = wb_reg.alu_out;
+			id_regfile_out1_bypass = wb_reg.alu_out;
 		endcase
 	end
 
 	always_comb begin
 		priority case (control.alu_out_to_reg2_bypass)
 		ALU_OUT_BYPASS_FROM_NONE:
-			next_ex_reg.regfile_out2 = id_regfile_out2;
+			id_regfile_out2_bypass = id_regfile_out2;
 		ALU_OUT_BYPASS_FROM_EX:
-			next_ex_reg.regfile_out2 = ex_alu_out;
+			id_regfile_out2_bypass = ex_alu_out;
 		ALU_OUT_BYPASS_FROM_MEM:
-			next_ex_reg.regfile_out2 = mem_reg.alu_out;
+			id_regfile_out2_bypass = mem_reg.alu_out;
 		ALU_OUT_BYPASS_FROM_WB:
-			next_ex_reg.regfile_out2 = wb_reg.alu_out;
+			id_regfile_out2_bypass = wb_reg.alu_out;
 		endcase
 	end
 
+	assign next_ex_reg.regfile_out1 = id_regfile_out1_bypass;
+	assign next_ex_reg.regfile_out2 = id_regfile_out2_bypass;
 	assign next_ex_reg.regfile_wr_addr = id_reg.instr.common.rd;
 	assign next_ex_reg.csr_wr_addr = id_reg.instr.itype.imm;
 	assign next_ex_reg.regfile_we = control.decode_out.regfile_we;
@@ -352,6 +356,12 @@ module datapath # (
 	end
 
 	/* Multiply M0 stage */
+	assign next_mul_m0_reg.op1 = id_regfile_out1_bypass;
+	assign next_mul_m0_reg.op2 = id_regfile_out2_bypass;
+	assign next_mul_m0_reg.muldiv_op = control.decode_out.muldiv_op;
+	assign next_mul_m0_reg.regfile_wr_addr = id_reg.instr.common.rd;
+	assign next_mul_m0_reg.valid = control.mul_m0_reg_valid;
+
 	always_ff @(posedge clk_i) begin
 		if (reset_i)
 			mul_m0_reg <= 'b0;
@@ -359,8 +369,13 @@ module datapath # (
 			mul_m0_reg <= control.mul_m0_reg_stall ? mul_m0_reg : next_mul_m0_reg;
 	end
 
-	assign next_mul_m1_reg.op1 = mul_m0_reg.op1;
-	assign next_mul_m1_reg.op2 = mul_m0_reg.op2;
+	muldiv muldiv(
+		.muldiv_op_i(mul_m0_reg.muldiv_op),
+		.in1_i(mul_m0_reg.op1),
+		.in2_i(mul_m0_reg.op1),
+		.out_o(next_mul_m1_reg.muldiv_out)
+	);
+
 	assign next_mul_m1_reg.regfile_wr_addr = mul_m0_reg.regfile_wr_addr;
 	assign next_mul_m1_reg.valid = mul_m0_reg.valid;
 
@@ -372,10 +387,7 @@ module datapath # (
 			mul_m1_reg <= control.mul_m1_reg_stall ? mul_m1_reg : next_mul_m1_reg;
 	end
 
-	assign next_mul_m2_reg.op1 = mul_m1_reg.op1;
-	assign next_mul_m2_reg.op2 = mul_m1_reg.op2;
-	assign next_mul_m2_reg.regfile_wr_addr = mul_m1_reg.regfile_wr_addr;
-	assign next_mul_m2_reg.valid = mul_m1_reg.valid;
+	assign next_mul_m2_reg = mul_m1_reg;
 
 	/* Multiply M2 stage */
 	always_ff @(posedge clk_i) begin
@@ -385,10 +397,7 @@ module datapath # (
 			mul_m2_reg <= control.mul_m2_reg_stall ? mul_m2_reg : next_mul_m2_reg;
 	end
 
-	assign next_mul_m3_reg.op1 = mul_m2_reg.op1;
-	assign next_mul_m3_reg.op2 = mul_m2_reg.op2;
-	assign next_mul_m3_reg.regfile_wr_addr = mul_m2_reg.regfile_wr_addr;
-	assign next_mul_m3_reg.valid = mul_m2_reg.valid;
+	assign next_mul_m3_reg = mul_m2_reg;
 
 	/* Multiply M3 stage */
 	always_ff @(posedge clk_i) begin
@@ -398,10 +407,7 @@ module datapath # (
 			mul_m3_reg <= control.mul_m3_reg_stall ? mul_m3_reg : next_mul_m3_reg;
 	end
 
-	assign next_mul_m4_reg.op1 = mul_m3_reg.op1;
-	assign next_mul_m4_reg.op2 = mul_m3_reg.op2;
-	assign next_mul_m4_reg.regfile_wr_addr = mul_m3_reg.regfile_wr_addr;
-	assign next_mul_m4_reg.valid = mul_m3_reg.valid;
+	assign next_mul_m4_reg = mul_m3_reg;
 
 	/* Multiply M4 stage */
 	always_ff @(posedge clk_i) begin
@@ -411,9 +417,9 @@ module datapath # (
 			mul_m4_reg <= control.mul_m4_reg_stall ? mul_m4_reg : next_mul_m4_reg;
 	end
 
-	assign next_mul_wmul_reg.result = mul_m4_reg.op1 * mul_m4_reg.op2;
-	assign next_mul_wmul_reg.regfile_wr_addr = mul_m3_reg.regfile_wr_addr;
-	assign next_mul_wmul_reg.valid = mul_m3_reg.valid;
+	assign next_mul_wmul_reg.muldiv_out = mul_m4_reg.muldiv_out;
+	assign next_mul_wmul_reg.regfile_wr_addr = mul_m4_reg.regfile_wr_addr;
+	assign next_mul_wmul_reg.valid = mul_m4_reg.valid;
 
 	/* Multiply Writeback stage */
 	always_ff @(posedge clk_i) begin

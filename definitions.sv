@@ -134,6 +134,17 @@ typedef enum logic [2:0] {
 } funct3_op_t;
 
 typedef enum logic [2:0] {
+	FUNCT3_OP_MULDIV_MUL    = 3'b000,
+	FUNCT3_OP_MULDIV_MULH   = 3'b001,
+	FUNCT3_OP_MULDIV_MULHSU = 3'b010,
+	FUNCT3_OP_MULDIV_MULHU  = 3'b011,
+	FUNCT3_OP_MULDIV_DIV    = 3'b100,
+	FUNCT3_OP_MULDIV_DIVU   = 3'b101,
+	FUNCT3_OP_MULDIV_REM    = 3'b110,
+	FUNCT3_OP_MULDIV_REMU   = 3'b111
+} funct3_op_muldiv_t;
+
+typedef enum logic [2:0] {
 	FUNCT3_MISC_MEM_FENCE   = 3'b000,
 	FUNCT3_MISC_MEM_FENCE_I = 3'b001
 } funct3_misc_mem_t;
@@ -147,6 +158,10 @@ typedef enum logic [2:0] {
 	FUNCT3_SYSTEM_CSRRSI = 3'b110,
 	FUNCT3_SYSTEM_CSRRCI = 3'b111
 } funct3_system_t;
+
+typedef enum logic [6:0] {
+	FUNCT7_OP_MULDIV = 7'b0000001
+} funct7_op_t;
 
 typedef enum logic [11:0] {
 	FUNCT12_SYSTEM_PRIV_ECALL  = 12'b000000000000,
@@ -286,12 +301,19 @@ typedef struct packed {
 typedef struct packed {
 	logic [31:0] op1;
 	logic [31:0] op2;
+	funct3_op_muldiv_t muldiv_op;
 	logic [4:0] regfile_wr_addr;
 	logic valid;
-} pipeline_mul_m01234_reg_t;
+} pipeline_mul_m0_reg_t;
 
 typedef struct packed {
-	logic [31:0] result;
+	logic [31:0] muldiv_out;
+	logic [4:0] regfile_wr_addr;
+	logic valid;
+} pipeline_mul_m1234_reg_t;
+
+typedef struct packed {
+	logic [31:0] muldiv_out;
 	logic [4:0] regfile_wr_addr;
 	logic valid;
 } pipeline_mul_wmul_reg_t;
@@ -304,6 +326,7 @@ typedef struct packed {
 	alu_op_t alu_op;
 	alu_in1_sel_t alu_in1_sel;
 	alu_in2_sel_t alu_in2_sel;
+	funct3_op_muldiv_t muldiv_op;
 	compare_unit_op_t compare_unit_op;
 	regfile_wr_sel_t regfile_wr_sel;
 	cache_access_size_t dcache_rd_size;
@@ -314,6 +337,7 @@ typedef struct packed {
 	logic is_jump;
 	logic is_ecall;
 	logic is_mem_access;
+	logic is_muldiv;
 } decode_out_t;
 
 typedef enum logic [1:0] {
@@ -347,6 +371,7 @@ typedef struct packed {
 	logic wb_reg_valid;
 	/* MUL_M0 stage */
 	logic mul_m0_reg_stall;
+	logic mul_m0_reg_valid;
 	/* MUL_M1 stage */
 	logic mul_m1_reg_stall;
 	/* MUL_M2 stage */

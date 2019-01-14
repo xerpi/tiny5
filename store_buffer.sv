@@ -66,6 +66,7 @@ module store_buffer # (
 		size = full ? NUM_ENTRIES :
 			      ((head >= tail) ? (head - tail)	 :
 					        (head + NUM_ENTRIES - tail));
+		snoop_data_o = 0;
 		snoop_hit_o = 0;
 		snoop_line_conflict_o = 0;
 		for (int i = 0; i < size; i++) begin

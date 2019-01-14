@@ -52,6 +52,7 @@ add wave -radix 16 -expand -group {ICache bus} sim:/top/icache_bus.hit
 
 add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.addr
 add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.rd_data
+add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.rd_size
 add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.wr_data
 add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.wr_size
 add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.write
@@ -60,10 +61,12 @@ add wave -radix 16 -expand -group {DCache bus} sim:/top/dcache_bus.hit
 
 add wave -radix 16 -expand -group {ICache} sim:/top/icache/state
 add wave -radix 16 -expand -group {ICache} sim:/top/icache/hit
+add wave -radix 16 -expand -group {ICache} sim:/top/icache/cur_line
 add wave -radix 16 -expand -group {ICache} sim:/top/icache/lines
 
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/state
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/hit
+add wave -radix 16 -expand -group {DCache} sim:/top/dcache/cur_line
 add wave -radix 16 -expand -group {DCache} sim:/top/dcache/lines
 
 add wave -radix 16 -expand -group {Memory arbiter} sim:/top/memory_arbiter/state

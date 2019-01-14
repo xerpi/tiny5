@@ -16,6 +16,9 @@ module memory_arbiter(
 	memory_arbiter_state_t state;
 	memory_arbiter_state_t next_state;
 
+	assign icache_memory_bus.rd_data = memory_bus.rd_data;
+	assign dcache_memory_bus.rd_data = memory_bus.rd_data;
+
 	always_comb begin
 		next_state = state;
 		priority case (state)
@@ -51,7 +54,6 @@ module memory_arbiter(
 		ICACHE_REQUEST,
 		ICACHE_WAIT: begin
 			memory_bus.addr = icache_memory_bus.addr;
-			icache_memory_bus.rd_data = memory_bus.rd_data;
 			memory_bus.wr_data = icache_memory_bus.wr_data;
 			memory_bus.write = icache_memory_bus.write;
 			memory_bus.valid = icache_memory_bus.valid;
@@ -61,7 +63,6 @@ module memory_arbiter(
 		DCACHE_REQUEST,
 		DCACHE_WAIT: begin
 			memory_bus.addr = dcache_memory_bus.addr;
-			dcache_memory_bus.rd_data = memory_bus.rd_data;
 			memory_bus.wr_data = dcache_memory_bus.wr_data;
 			memory_bus.write = dcache_memory_bus.write;
 			memory_bus.valid = dcache_memory_bus.valid;

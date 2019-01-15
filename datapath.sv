@@ -102,15 +102,30 @@ module datapath # (
 	logic [31:0] id_regfile_out2;
 	logic [31:0] id_regfile_out1_bypass;
 	logic [31:0] id_regfile_out2_bypass;
+	logic [4:0] id_regfile_wr_addr;
+	logic [31:0] id_regfile_wr_data;
+	logic id_regfile_wr_en;
+
+	always_comb begin
+		if (mul_wmul_reg.valid) begin
+			id_regfile_wr_addr = mul_wmul_reg.regfile_wr_addr;
+			id_regfile_wr_data = mul_wmul_reg.muldiv_out;
+			id_regfile_wr_en = 1;
+		end else begin
+			id_regfile_wr_addr = wb_reg.regfile_wr_addr;
+			id_regfile_wr_data = wb_regfile_wr_data;
+			id_regfile_wr_en = wb_reg.regfile_we && wb_reg.valid;
+		end
+	end
 
 	regfile regfile(
 		.clk_i(clk_i),
 		.reset_i(reset_i),
 		.rd_addr1_i(id_reg.instr.common.rs1),
 		.rd_addr2_i(id_reg.instr.common.rs2),
-		.wr_addr_i(wb_reg.regfile_wr_addr),
-		.wr_data_i(wb_regfile_wr_data),
-		.wr_en_i(wb_reg.regfile_we && wb_reg.valid),
+		.wr_addr_i(id_regfile_wr_addr),
+		.wr_data_i(id_regfile_wr_data),
+		.wr_en_i(id_regfile_wr_en),
 		.rd_data1_o(id_regfile_out1),
 		.rd_data2_o(id_regfile_out2)
 	);
@@ -130,8 +145,6 @@ module datapath # (
 		.instr_i(id_reg.instr),
 		.imm_o(next_ex_reg.imm)
 	);
-
-	assign next_ex_reg.pc = id_reg.pc;
 
 	always_comb begin
 		priority case (control.alu_out_to_reg1_bypass)
@@ -159,6 +172,7 @@ module datapath # (
 		endcase
 	end
 
+	assign next_ex_reg.pc = id_reg.pc;
 	assign next_ex_reg.regfile_out1 = id_regfile_out1_bypass;
 	assign next_ex_reg.regfile_out2 = id_regfile_out2_bypass;
 	assign next_ex_reg.regfile_wr_addr = id_reg.instr.common.rd;
@@ -343,12 +357,12 @@ module datapath # (
 	muldiv muldiv(
 		.muldiv_op_i(mul_m0_reg.muldiv_op),
 		.in1_i(mul_m0_reg.op1),
-		.in2_i(mul_m0_reg.op1),
+		.in2_i(mul_m0_reg.op2),
 		.out_o(next_mul_m1_reg.muldiv_out)
 	);
 
 	assign next_mul_m1_reg.regfile_wr_addr = mul_m0_reg.regfile_wr_addr;
-	assign next_mul_m1_reg.valid = mul_m0_reg.valid;
+	assign next_mul_m1_reg.valid = control.mul_m1_reg_valid;
 
 	/* Multiply M1 stage */
 	`FF_RESET_EN(clk_i, reset_i, next_mul_m1_reg, mul_m1_reg, !control.mul_m1_reg_stall, 'b0);

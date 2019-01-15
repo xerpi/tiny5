@@ -374,6 +374,7 @@ typedef struct packed {
 	logic mul_m0_reg_valid;
 	/* MUL_M1 stage */
 	logic mul_m1_reg_stall;
+	logic mul_m1_reg_valid;
 	/* MUL_M2 stage */
 	logic mul_m2_reg_stall;
 	/* MUL_M3 stage */

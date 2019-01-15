@@ -33,14 +33,30 @@ module muldiv(
 			out_o = mul_su[32 +: 32];
 		FUNCT3_OP_MULDIV_MULHU:
 			out_o = mul_uu[32 +: 32];
-		FUNCT3_OP_MULDIV_DIV:
-			out_o = $signed(in1_i) / $signed(in2_i);
-		FUNCT3_OP_MULDIV_DIVU:
-			out_o = in1_i / in2_i;
-		FUNCT3_OP_MULDIV_REM:
-			out_o = $signed(in1_i) % $signed(in2_i);
-		FUNCT3_OP_MULDIV_REMU:
-			out_o = in1_i % in2_i;
+		FUNCT3_OP_MULDIV_DIV: begin
+			if (in2_i == 0)
+				out_o = -1;
+			else
+				out_o = $signed(in1_i) / $signed(in2_i);
+		end
+		FUNCT3_OP_MULDIV_DIVU: begin
+			if (in2_i == 0)
+				out_o = 'hFFFFFFFF;
+			else
+				out_o = in1_i / in2_i;
+		end
+		FUNCT3_OP_MULDIV_REM: begin
+			if (in2_i == 0)
+				out_o = in1_i;
+			else
+				out_o = $signed(in1_i) % $signed(in2_i);
+		end
+		FUNCT3_OP_MULDIV_REMU: begin
+			if (in2_i == 0)
+				out_o = in1_i;
+			else
+				out_o = in1_i % in2_i;
+		end
 		endcase
 	end
 endmodule

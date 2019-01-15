@@ -1,6 +1,16 @@
 	.text
 	.global _start
 _start:
+	li   x1, 20
+	li   x2, -3
+	div  x3, x1, x2
+
+	nop
+	nop
+	nop
+
+
+
 	la x1, data
 	li x2, 0x11223344
 	li x3, 0x55667788

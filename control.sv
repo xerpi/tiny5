@@ -24,6 +24,12 @@ module control(
 	logic ex_data_hazard;
 	logic mem_data_hazard;
 	logic wb_data_hazard;
+	logic mul_m0_data_hazard;
+	logic mul_m1_data_hazard;
+	logic mul_m2_data_hazard;
+	logic mul_m3_data_hazard;
+	logic mul_m4_data_hazard;
+	logic mul_wmul_data_hazard;
 	logic data_hazard;
 
 	assign ex_data_hazard = ex_reg_i.valid && ex_reg_i.regfile_we &&
@@ -32,6 +38,18 @@ module control(
 		data_hazard_raw_check(id_reg_i.instr, mem_reg_i.regfile_wr_addr);
 	assign wb_data_hazard = wb_reg_i.valid && wb_reg_i.regfile_we &&
 		data_hazard_raw_check(id_reg_i.instr, wb_reg_i.regfile_wr_addr);
+	assign mul_m0_data_hazard = mul_m0_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_m0_reg_i.regfile_wr_addr);
+	assign mul_m1_data_hazard = mul_m1_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_m1_reg_i.regfile_wr_addr);
+	assign mul_m2_data_hazard = mul_m2_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_m2_reg_i.regfile_wr_addr);
+	assign mul_m3_data_hazard = mul_m3_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_m3_reg_i.regfile_wr_addr);
+	assign mul_m4_data_hazard = mul_m4_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_m4_reg_i.regfile_wr_addr);
+	assign mul_wmul_data_hazard = mul_wmul_reg_i.valid &&
+		data_hazard_raw_check(id_reg_i.instr, mul_wmul_reg_i.regfile_wr_addr);
 
 	/* Bypass/forwarding */
 	logic ex_alu_out_to_reg1_bypass;
@@ -57,7 +75,9 @@ module control(
 	assign data_hazard =
 		(ex_data_hazard && !(ex_alu_out_to_reg1_bypass || ex_alu_out_to_reg2_bypass)) ||
 		(mem_data_hazard && !(mem_alu_out_to_reg1_bypass || mem_alu_out_to_reg2_bypass)) ||
-		(wb_data_hazard && !(wb_alu_out_to_reg1_bypass || wb_alu_out_to_reg2_bypass));
+		(wb_data_hazard && !(wb_alu_out_to_reg1_bypass || wb_alu_out_to_reg2_bypass)) ||
+		mul_m0_data_hazard || mul_m1_data_hazard || mul_m2_data_hazard ||
+		mul_m3_data_hazard || mul_m4_data_hazard || mul_wmul_data_hazard;
 
 	always_comb begin
 		if (ex_alu_out_to_reg1_bypass)
@@ -144,6 +164,10 @@ module control(
 
 	/* Pipeline interlock logic */
 	logic stall_full_pipeline;
+	logic mul_m2_m3_m4_valid;
+
+	assign mul_m2_m3_m4_valid = mul_m2_reg_i.valid || mul_m3_reg_i.valid ||
+				    mul_m4_reg_i.valid;
 
 	assign stall_full_pipeline = load_and_sb_line_conflict ||
 				     load_cache_miss_sb_miss ||
@@ -151,30 +175,38 @@ module control(
 
 	assign control_o.pc_reg_stall = (data_hazard && !control_hazard) ||
 					icache_busy ||
+					mul_m2_m3_m4_valid ||
 					stall_full_pipeline;
 
 	assign control_o.id_reg_stall = (data_hazard && !control_hazard) ||
+					mul_m2_m3_m4_valid ||
 					stall_full_pipeline;
 	assign control_o.id_reg_valid = !control_hazard &&
 					!icache_busy;
 
-	assign control_o.ex_reg_stall = stall_full_pipeline;
+	assign control_o.ex_reg_stall = stall_full_pipeline ||
+					mul_m2_m3_m4_valid;
 	assign control_o.ex_reg_valid = id_reg_i.valid &&
-					!data_hazard && !control_hazard &&
-					!control_o.decode_out.is_muldiv;
+					!control_o.decode_out.is_muldiv &&
+					!data_hazard && !control_hazard;
 
 	assign control_o.mem_reg_stall = stall_full_pipeline ||
-					 (icache_busy && control_hazard);
+					 (icache_busy && control_hazard) ||
+					 mul_m2_m3_m4_valid;
 	assign control_o.mem_reg_valid = ex_reg_i.valid && !control_hazard;
 
-	assign control_o.wb_reg_valid = mem_reg_i.valid && !stall_full_pipeline;
+	assign control_o.wb_reg_valid = mem_reg_i.valid &&
+					!stall_full_pipeline &&
+					!mul_m2_m3_m4_valid;
 
 	assign control_o.mul_m0_reg_stall = stall_full_pipeline;
 	assign control_o.mul_m0_reg_valid = id_reg_i.valid &&
-					!data_hazard && !control_hazard &&
-					control_o.decode_out.is_muldiv;
+					    control_o.decode_out.is_muldiv &&
+					    !control_hazard;
 
 	assign control_o.mul_m1_reg_stall = stall_full_pipeline;
+	assign control_o.mul_m1_reg_valid = mul_m0_reg_i.valid &&
+					    !control_hazard;
 
 	assign control_o.mul_m2_reg_stall = stall_full_pipeline;
 

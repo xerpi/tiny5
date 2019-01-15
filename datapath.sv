@@ -1,5 +1,6 @@
 import definitions::*;
 import cache_interface_types::*;
+`include "utils.svh"
 
 module datapath # (
 	parameter ADDR_SIZE = 32,
@@ -73,12 +74,7 @@ module datapath # (
 	);
 
 	/* IF stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			pc <= 'h00001000;
-		else
-			pc <= control.pc_reg_stall ? pc : next_pc;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_pc, pc, !control.pc_reg_stall, 'h00001000);
 
 	assign icache_bus.addr = pc;
 	assign icache_bus.rd_size = CACHE_ACCESS_SIZE_WORD;
@@ -100,12 +96,7 @@ module datapath # (
 	assign next_id_reg.valid = control.id_reg_valid;
 
 	/* ID stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			id_reg <= 'b0;
-		else
-			id_reg <= control.id_reg_stall ? id_reg : next_id_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_id_reg, id_reg, !control.id_reg_stall, 'b0);
 
 	logic [31:0] id_regfile_out1;
 	logic [31:0] id_regfile_out2;
@@ -190,12 +181,7 @@ module datapath # (
 	assign next_ex_reg.valid = control.ex_reg_valid;
 
 	/* EX stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			ex_reg <= 'b0;
-		else
-			ex_reg <= control.ex_reg_stall ? ex_reg : next_ex_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_ex_reg, ex_reg, !control.ex_reg_stall, 'b0);
 
 	logic [31:0] ex_alu_in1;
 	logic [31:0] ex_alu_in2;
@@ -254,12 +240,7 @@ module datapath # (
 	assign next_mem_reg.valid = control.mem_reg_valid;
 
 	/* MEM stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mem_reg <= 'b0;
-		else
-			mem_reg <= control.mem_reg_stall ? mem_reg : next_mem_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mem_reg, mem_reg, !control.mem_reg_stall, 'b0);
 
 	logic [WORD_SIZE - 1 : 0] mem_dcache_rd_data_sext;
 	logic [ADDR_SIZE - 1 : 0] store_buffer_get_addr;
@@ -335,12 +316,7 @@ module datapath # (
 	assign next_wb_reg.valid = control.wb_reg_valid;
 
 	/* WB stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			wb_reg <= 'b0;
-		else
-			wb_reg <= next_wb_reg;
-	end
+	`FF_RESET(clk_i, reset_i, next_wb_reg, wb_reg, 'b0);
 
 	always_comb begin
 		priority case (wb_reg.regfile_wr_sel)
@@ -362,12 +338,7 @@ module datapath # (
 	assign next_mul_m0_reg.regfile_wr_addr = id_reg.instr.common.rd;
 	assign next_mul_m0_reg.valid = control.mul_m0_reg_valid;
 
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_m0_reg <= 'b0;
-		else
-			mul_m0_reg <= control.mul_m0_reg_stall ? mul_m0_reg : next_mul_m0_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mul_m0_reg, mul_m0_reg, !control.mul_m0_reg_stall, 'b0);
 
 	muldiv muldiv(
 		.muldiv_op_i(mul_m0_reg.muldiv_op),
@@ -380,52 +351,27 @@ module datapath # (
 	assign next_mul_m1_reg.valid = mul_m0_reg.valid;
 
 	/* Multiply M1 stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_m1_reg <= 'b0;
-		else
-			mul_m1_reg <= control.mul_m1_reg_stall ? mul_m1_reg : next_mul_m1_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mul_m1_reg, mul_m1_reg, !control.mul_m1_reg_stall, 'b0);
 
 	assign next_mul_m2_reg = mul_m1_reg;
 
 	/* Multiply M2 stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_m2_reg <= 'b0;
-		else
-			mul_m2_reg <= control.mul_m2_reg_stall ? mul_m2_reg : next_mul_m2_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mul_m2_reg, mul_m2_reg, !control.mul_m2_reg_stall, 'b0);
 
 	assign next_mul_m3_reg = mul_m2_reg;
 
 	/* Multiply M3 stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_m3_reg <= 'b0;
-		else
-			mul_m3_reg <= control.mul_m3_reg_stall ? mul_m3_reg : next_mul_m3_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mul_m3_reg, mul_m3_reg, !control.mul_m3_reg_stall, 'b0);
 
 	assign next_mul_m4_reg = mul_m3_reg;
 
 	/* Multiply M4 stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_m4_reg <= 'b0;
-		else
-			mul_m4_reg <= control.mul_m4_reg_stall ? mul_m4_reg : next_mul_m4_reg;
-	end
+	`FF_RESET_EN(clk_i, reset_i, next_mul_m4_reg, mul_m4_reg, !control.mul_m4_reg_stall, 'b0);
 
 	assign next_mul_wmul_reg.muldiv_out = mul_m4_reg.muldiv_out;
 	assign next_mul_wmul_reg.regfile_wr_addr = mul_m4_reg.regfile_wr_addr;
 	assign next_mul_wmul_reg.valid = mul_m4_reg.valid;
 
 	/* Multiply Writeback stage */
-	always_ff @(posedge clk_i) begin
-		if (reset_i)
-			mul_wmul_reg <= 'b0;
-		else
-			mul_wmul_reg <= next_mul_wmul_reg;
-	end
+	`FF_RESET(clk_i, reset_i, next_mul_wmul_reg, mul_wmul_reg, 'b0);
 endmodule

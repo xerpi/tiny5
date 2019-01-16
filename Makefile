@@ -9,7 +9,7 @@ VERILOG_SOURCES = cache_interface_types.sv definitions.sv alu.sv muldiv.sv compa
 	cache_sign_extend.sv store_buffer.sv top.sv utils.svh
 
 VERILATOR_TB_SOURCES = tb/main.cpp tb/Tiny5Tb.cpp
-TEST_SOURCES = test/start.s
+TEST_SOURCES = test/test.s
 
 VERILATOR_VTOP = V$(TOP_MODULE)
 CFLAGS = -std=c++11 -DVTOP_MODULE=$(VERILATOR_VTOP) -DTRACE_FILE="\\\"$(TRACE_FILE)\\\""
@@ -45,13 +45,6 @@ modelsim: test.bin $(VERILOG_SOURCES)
 	vlog -ccflags "-std=c++11" $(VERILOG_SOURCES)
 	vsim -do tb/modelsim.do $(TOP_MODULE)
 
-#### Test code ####
-test.elf: $(TEST_SOURCES)
-	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
-
-disasm_test: test.elf
-	@riscv64-unknown-elf-objdump -M numeric,no-aliases -D $^
-
 #### Official RISC-V tests ####
 RISCV_TESTS_DIR = ../riscv-tests
 RISCV_TESTS_INC = -I$(RISCV_TESTS_DIR)/isa/macros/scalar -I$(RISCV_TESTS_DIR)/env/p
@@ -74,6 +67,36 @@ riscv-tests-clean:
 %.elf: $(RISCV_TESTS_DIR)/isa/rv32*/%.S
 	@riscv64-unknown-elf-gcc -I./ $(RISCV_TESTS_INC) -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
 
+#### Own tests ####
+
+run-buffer_sum: buffer_sum.bin obj_dir/$(VERILATOR_VTOP)
+	@hexdump $(HEXDUMP_FLAGS) $< > memory.hex.txt
+	@obj_dir/$(VERILATOR_VTOP) -m 20000 $(ARGS)
+
+buffer_sum.elf: test/start.s test/buffer_sum.c
+	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+
+run-memcpy: memcpy.bin obj_dir/$(VERILATOR_VTOP)
+	@hexdump $(HEXDUMP_FLAGS) $< > memory.hex.txt
+	@obj_dir/$(VERILATOR_VTOP) -m 20000 $(ARGS)
+
+memcpy.elf: test/start.s test/memcpy.c
+	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+
+run-matrix_multiply: matrix_multiply.bin obj_dir/$(VERILATOR_VTOP)
+	@hexdump $(HEXDUMP_FLAGS) $< > memory.hex.txt
+	@obj_dir/$(VERILATOR_VTOP) -m 100000 $(ARGS)
+
+matrix_multiply.elf: test/start.s test/matrix_multiply.c
+	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+
+# Test code
+test.elf: $(TEST_SOURCES)
+	riscv64-unknown-elf-gcc -T test/linker.ld $(TEST_CFLAGS) $^ -o $@
+
+disasm_test: test.elf
+	@riscv64-unknown-elf-objdump -M numeric,no-aliases -D $^
+
 #### Common rules ####
 %.bin: %.elf
 	@riscv64-unknown-elf-objcopy -S -O binary $^ $@
@@ -82,7 +105,7 @@ riscv-tests-clean:
 	@hexdump $(HEXDUMP_FLAGS) $< > $@
 
 clean: riscv-tests-clean
-	@rm -rf obj_dir work $(TRACE_FILE) $(TRACE_FILE).hier test.elf test.bin memory.hex.txt \
+	@rm -rf obj_dir work $(TRACE_FILE) $(TRACE_FILE).hier *.elf *.bin *.hex.txt \
 		vsim.wlf transcript
 
 .PHONY:

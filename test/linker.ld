@@ -15,4 +15,8 @@ SECTIONS
 		*(.data*)
 		*(.bss*)
 	}
+	. = ALIGN(1024);
+	_sp_start = .;
+	. += 1024;
+	_sp_end = .;
 }

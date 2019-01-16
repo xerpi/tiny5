@@ -16,8 +16,8 @@ module muldiv(
 
 	assign in1_64_signed = {{32{in1_i[31]}}, in1_i};
 	assign in2_64_signed = {{32{in2_i[31]}}, in2_i};
-	assign in1_64_unsigned = {0, in1_i};
-	assign in2_64_unsigned = {0, in2_i};
+	assign in1_64_unsigned = {32'd0, in1_i};
+	assign in2_64_unsigned = {32'd0, in2_i};
 
 	assign mul_ss = in1_64_signed * in2_64_signed;
 	assign mul_uu = in1_64_unsigned * in2_64_unsigned;

@@ -202,7 +202,7 @@ module control(
 	assign control_o.mul_m0_reg_stall = stall_full_pipeline;
 	assign control_o.mul_m0_reg_valid = id_reg_i.valid &&
 					    control_o.decode_out.is_muldiv &&
-					    !control_hazard;
+					    !data_hazard && !control_hazard;
 
 	assign control_o.mul_m1_reg_stall = stall_full_pipeline;
 	assign control_o.mul_m1_reg_valid = mul_m0_reg_i.valid &&

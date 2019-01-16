@@ -13,10 +13,11 @@ SECTIONS
 	}
 	.data : {
 		*(.data*)
+		*(.sdata*)
 		*(.bss*)
 	}
 	. = ALIGN(1024);
-	_sp_start = .;
+	_sp_start = ABSOLUTE(.);
 	. += 1024;
-	_sp_end = .;
+	_sp_end = ABSOLUTE(.);
 }

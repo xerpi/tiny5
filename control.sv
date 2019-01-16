@@ -217,9 +217,14 @@ module control(
 	/* For RISC-V tests */
 	always_comb begin
 		if (wb_reg_i.valid && wb_reg_i.is_ecall) begin
-			$display("ECALL, x3: 0x%h, pc: 0x%h",
+			$display("**ECALL**\nR3: 0x%h (%d)\nPC: 0x%h",
+				top.datapath.regfile.registers[3],
 				top.datapath.regfile.registers[3],
 				wb_reg_i.pc);
+			$display("Cycles: %d\nInsret: %d",
+				top.datapath.csr.reg_cycle + 1,
+				top.datapath.csr.reg_instret + 1);
+			$finish();
 		end
 	end
 endmodule

@@ -69,6 +69,12 @@ riscv-tests-clean:
 
 #### Own tests ####
 
+modelsim-buffer_sum: buffer_sum.bin $(VERILOG_SOURCES)
+	@hexdump $(HEXDUMP_FLAGS) $< > memory.hex.txt
+	vlib work
+	vlog -ccflags "-std=c++11" $(VERILOG_SOURCES)
+	vsim -do tb/modelsim.do $(TOP_MODULE)
+
 run-buffer_sum: buffer_sum.bin obj_dir/$(VERILATOR_VTOP)
 	@hexdump $(HEXDUMP_FLAGS) $< > memory.hex.txt
 	@obj_dir/$(VERILATOR_VTOP) -m 20000 $(ARGS)
